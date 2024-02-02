@@ -1,0 +1,40 @@
+
+svl clean info: [persistent] product.bcg
+
+svl clean info: [temporary] product.exp
+
+% 2>>"demo.log" rm -f "product.exp" ; touch "product.exp"
+command exit with status 0
+
+"product.exp" =
+    par "b" in
+        "P1.aut"
+    ||
+        "P2.aut"
+    end par
+
+"product.bcg" = generation of "product.exp"
+
+svl clean info: [temporary] generator
+
+svl clean info: [temporary] generator.o
+
+svl clean info: [temporary] product.c
+
+svl clean info: [temporary] product.o
+
+% exp.open -strong   "product.exp"  generator  "product.bcg"
+exp.open: using ``/home/alex/src/open_caesar/generator.c''
+exp.open: generating product.c ...
+exp2c: converting ``P1.aut'' into ``P1.bcg''
+exp2c: converting ``P2.aut'' into ``P2.bcg''
+exp.open: compiling product.c ...
+/home/alex/src/com/cadp_cc   -c -I/home/alex/incl -o product.o product.c
+/home/alex/src/com/cadp_cc -I. -I/home/alex/incl -I/home/alex/src/open_caesar  -c /home/alex/src/open_caesar/generator.c -o generator.o
+/home/alex/src/com/cadp_cc  generator.o product.o -o generator -L/home/alex/bin.x64 -lexp_open -L/home/alex/bin.x64 -lcaesar -lBCG_IO -lBCG -L/home/alex/bin.x64 -lBCG_IO -lBCG -lm
+exp.open: running ``generator product.bcg'' for ``./product.exp''
+command exit with status 0
+
+info about product.bcg:
+    (* 5 states, 5 transitions, 2.3 Kbytes *)
+

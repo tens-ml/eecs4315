@@ -1,0 +1,7 @@
+"part2.bcg" = 
+	generation of 
+		par "b", "e" in 
+			"left.aut"
+			||
+			"right.aut"
+		end par;

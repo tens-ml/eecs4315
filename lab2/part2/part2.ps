@@ -1,0 +1,216 @@
+%!PS-Adobe-2.0
+%%Title: /home/alex/lab2/part2/part2.bcg
+%%Creator: bcg_draw
+%%CreationDate: Fri Feb  2 17:58:14 2024
+%%Pages: 1
+%%BoundingBox: 0 0 595 842
+%%EndComments
+%%Page: 1 1
+
+% BCG_BEGIN_SECTION_1
+/vertex_radius { 12.000000 } def
+/arrow_shape_1 { 7 } def
+/arrow_shape_2 { 9 } def
+/arrow_shape_3 { 3 } def
+/Times-Roman findfont 10.000000 scalefont setfont
+/text_y_shift { -3 } def
+% BCG_END_SECTION_1
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                                B C G
+% ----------------------------------------------------------------------------
+%   INRIA - Unite de Recherche Rhone-Alpes
+%   655, avenue de l'Europe
+%   38330 Montbonnot Saint Martin
+%   FRANCE
+% ----------------------------------------------------------------------------
+%   Module             :       bcg_draw_header.ps
+%   Auteurs            :       R. RUFFIOT, H. GARAVEL, R. MATEESCU, L.P. TOCK
+%   Version            :       2.6
+%   Date               :       2006/10/30 10:38:31
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%/
+
+1 setlinewidth
+1 setlinejoin
+0 setgray
+
+/show_text {			
+  dup				
+  stringwidth			
+   pop				
+  -2 div			
+  text_y_shift rmoveto		
+  show   
+} def
+
+/vertex {			
+  newpath	
+  2 copy			
+  vertex_radius 0 360 arc	
+  stroke
+  moveto			
+  show_text	
+} def
+
+/arrow {                        
+  newpath 
+  /a3 2 1 roll def
+  /a2 2 1 roll def              
+  /a1 2 1 roll def   
+  0 0 moveto
+  a2 a1 sub neg a3 neg rlineto
+  a2 a3 rlineto
+  a2 neg a3 rlineto
+  closepath
+  fill
+} def
+
+/edge {			
+  newpath 
+  /h 2 1 roll def		
+  /y2 2 1 roll def		
+  /x2 2 1 roll def		
+  /y1 2 1 roll def		
+  /x1 2 1 roll def		
+  gsave
+    x1 y1 moveto
+    x2 y2 lineto
+    stroke
+    y2 y1 sub				
+    x2 x1 sub				
+    2 copy abs 2 1 roll abs add 0.0 eq	
+      {				
+      pop
+      pop
+      }
+      { 
+      atan                  	
+      x2 y2 translate
+      rotate                    
+      arrow_shape_1 h mul 	
+      arrow_shape_2 h mul 	
+      arrow_shape_3 h mul  	
+      arrow			
+      }    
+    ifelse
+  grestore
+  moveto			
+  show_text
+} def
+
+/spline {		
+  newpath
+  /h 2 1 roll def	
+  /y3 2 1 roll def	
+  /x3 2 1 roll def	
+  /y2 2 1 roll def	
+  /x2 2 1 roll def	
+  /y1 2 1 roll def	
+  /x1 2 1 roll def	
+  /y0 2 1 roll def	
+  /x0 2 1 roll def	
+  gsave
+    /c2 0.333 x0 mul
+        0.667 x1 mul
+        add def
+    /c3 0.333 y0 mul
+        0.667 y1 mul
+        add def  
+    /c6 0.5 x1 mul
+        0.5 x2 mul
+        add def
+    /c7 0.5 y1 mul
+        0.5 y2 mul
+        add def
+    /c4 0.333 c6 mul
+        0.667 x1 mul
+        add def
+    /c5 0.333 c7 mul
+        0.667 y1 mul
+        add def
+    x0 y0 moveto
+    c2 c3 c4 c5 c6 c7 curveto
+    /c2 0.333 c6 mul
+        0.667 x2 mul
+        add def
+    /c3 0.333 c7 mul
+        0.667 y2 mul
+        add def  
+    /c6 x3 def
+    /c7 y3 def
+    /c4 0.333 c6 mul
+        0.667 x2 mul
+        add def
+    /c5 0.333 c7 mul
+        0.667 y2 mul
+        add def
+    c2 c3 c4 c5 c6 c7 curveto
+    stroke
+    y3 y2 sub				
+    x3 x2 sub				
+    2 copy abs 2 1 roll abs add 0.0 eq	
+      {				
+      pop
+      pop
+      }
+      { 
+      atan              	
+      x3 y3 translate
+      rotate            	
+      arrow_shape_1 h mul 	
+      arrow_shape_2 h mul  	
+      arrow_shape_3 h mul  	
+      arrow
+      }
+    ifelse
+  grestore
+  moveto			
+  show_text
+  } def
+
+/initialisation { } def
+initialisation
+% BCG_BEGIN_SECTION_2
+(0) 305.500000 100.800000 vertex
+(1) 166.250000 248.400000 vertex
+(2) 444.750000 248.400000 vertex
+(3) 166.250000 396.000000 vertex
+(4) 444.750000 396.000000 vertex
+(5) 96.625000 543.600000 vertex
+(6) 235.875000 543.600000 vertex
+(7) 514.375000 543.600000 vertex
+(8) 375.125000 543.600000 vertex
+(9) 119.833333 691.200000 vertex
+(10) 491.166667 691.200000 vertex
+(11) 305.500000 691.200000 vertex
+(a) 235.875000 174.600000 297.265207 109.528585 179.288422 234.579741 1.000000 edge % 0 1 0.500000
+(d) 375.125000 174.600000 313.734793 109.528585 431.711578 234.579741 1.000000 edge % 0 2 0.500000
+(b) 166.250000 322.200000 166.250000 260.400000 166.250000 377.000000 1.000000 edge % 1 3 0.500000
+(b) 206.723069 205.500000 174.484793 239.671415 292.461578 114.620259 1.000000 edge % 1 0 0.290650
+(d) 305.500000 322.200000 176.852954 254.019375 427.961990 387.102656 1.000000 edge % 1 4 0.500000
+(a) 444.750000 322.200000 444.750000 260.400000 444.750000 377.000000 1.000000 edge % 2 4 0.500000
+(c) 131.437500 469.800000 161.130434 406.853112 104.730979 526.415906 1.000000 edge % 3 5 0.500000
+(d) 201.062500 469.800000 171.369566 406.853112 227.769021 526.415906 1.000000 edge % 3 6 0.500000
+(b) 479.562500 469.800000 449.869566 406.853112 506.269021 526.415906 1.000000 edge % 4 7 0.500000
+(b) 409.937500 469.800000 439.630434 406.853112 383.230979 526.415906 1.000000 edge % 4 8 0.500000
+(d) 108.229167 617.400000 98.488955 555.454352 116.882071 672.430609 1.000000 edge % 5 9 0.500000
+(c) 177.854167 617.400000 228.458366 553.033639 131.576337 676.263405 1.000000 edge % 6 9 0.500000
+(c) 502.770833 617.400000 512.511045 555.454352 494.117929 672.430609 1.000000 edge % 7 10 0.500000
+(a) 340.312500 617.400000 370.005434 554.453112 313.605979 674.015906 1.000000 edge % 8 11 0.500000
+(e) 409.465786 431.400000 487.566764 679.752699 311.199845 118.924894 1.000000 edge % 10 0 0.440041
+% BCG_END_SECTION_2
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                                B C G
+% ----------------------------------------------------------------------------
+%   INRIA - Unite de Recherche Rhone-Alpes
+%   655, avenue de l'Europe
+%   38330 Montbonnot Saint Martin
+%   FRANCE
+% ----------------------------------------------------------------------------
+%   Module             :       bcg_draw_footer.ps
+%   Auteur             :       Renaud RUFFIOT
+%   Version            :       1.3
+%   Date               :       2013/09/09 10:10:05
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%/
+
+showpage
+%%EOF

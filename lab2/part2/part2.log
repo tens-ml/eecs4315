@@ -1,0 +1,40 @@
+
+svl clean info: [persistent] part2.bcg
+
+svl clean info: [temporary] part2.exp
+
+% 2>>"part2.log" rm -f "part2.exp" ; touch "part2.exp"
+command exit with status 0
+
+"part2.exp" =
+    par "b", "e" in
+        "left.aut"
+    ||
+        "right.aut"
+    end par
+
+"part2.bcg" = generation of "part2.exp"
+
+svl clean info: [temporary] generator
+
+svl clean info: [temporary] generator.o
+
+svl clean info: [temporary] part2.c
+
+svl clean info: [temporary] part2.o
+
+% exp.open -strong   "part2.exp"  generator  "part2.bcg"
+exp.open: using ``/home/alex/src/open_caesar/generator.c''
+exp.open: generating part2.c ...
+exp2c: converting ``left.aut'' into ``left.bcg''
+exp2c: converting ``right.aut'' into ``right.bcg''
+exp.open: compiling part2.c ...
+/home/alex/src/com/cadp_cc   -c -I/home/alex/incl -o part2.o part2.c
+/home/alex/src/com/cadp_cc -I. -I/home/alex/incl -I/home/alex/src/open_caesar  -c /home/alex/src/open_caesar/generator.c -o generator.o
+/home/alex/src/com/cadp_cc  generator.o part2.o -o generator -L/home/alex/bin.x64 -lexp_open -L/home/alex/bin.x64 -lcaesar -lBCG_IO -lBCG -L/home/alex/bin.x64 -lBCG_IO -lBCG -lm
+exp.open: running ``generator part2.bcg'' for ``./part2.exp''
+command exit with status 0
+
+info about part2.bcg:
+    (* 12 states, 15 transitions, 2.4 Kbytes *)
+
