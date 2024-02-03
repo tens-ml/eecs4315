@@ -1,0 +1,40 @@
+
+svl clean info: [persistent] carlightsystem.bcg
+
+svl clean info: [temporary] carlightsystem.exp
+
+% 2>>"carLightSystem.log" rm -f "carlightsystem.exp" ; touch "carlightsystem.exp"
+command exit with status 0
+
+"carlightsystem.exp" =
+    par "v", "v'", "p", "p'", "c", "c'", "d", "d'", "g", "g'" in
+        "subsystem1.aut"
+    ||
+        "subsystem2.aut"
+    end par
+
+"carlightsystem.bcg" = generation of "carlightsystem.exp"
+
+svl clean info: [temporary] generator
+
+svl clean info: [temporary] generator.o
+
+svl clean info: [temporary] carlightsystem.c
+
+svl clean info: [temporary] carlightsystem.o
+
+% exp.open -strong   "carlightsystem.exp"  generator  "carlightsystem.bcg"
+exp.open: using ``/eecs/local/pkg/cadp-2023-l/src/open_caesar/generator.c''
+exp.open: generating carlightsystem.c ...
+exp2c: converting ``subsystem1.aut'' into ``subsystem1.bcg''
+exp2c: converting ``subsystem2.aut'' into ``subsystem2.bcg''
+exp.open: compiling carlightsystem.c ...
+/eecs/local/pkg/cadp-2023-l/src/com/cadp_cc   -c -I/eecs/local/pkg/cadp-2023-l/incl -o carlightsystem.o carlightsystem.c
+/eecs/local/pkg/cadp-2023-l/src/com/cadp_cc -I. -I/eecs/local/pkg/cadp-2023-l/incl -I/eecs/local/pkg/cadp-2023-l/src/open_caesar  -c /eecs/local/pkg/cadp-2023-l/src/open_caesar/generator.c -o generator.o
+/eecs/local/pkg/cadp-2023-l/src/com/cadp_cc  generator.o carlightsystem.o -o generator -L/eecs/local/pkg/cadp-2023-l/bin.x64 -lexp_open -L/eecs/local/pkg/cadp-2023-l/bin.x64 -lcaesar -lBCG_IO -lBCG -L/eecs/local/pkg/cadp-2023-l/bin.x64 -lBCG_IO -lBCG -lm
+exp.open: running ``generator carlightsystem.bcg'' for ``./carlightsystem.exp''
+command exit with status 0
+
+info about carlightsystem.bcg:
+    (* 12 states, 34 transitions, 2.5 Kbytes *)
+
