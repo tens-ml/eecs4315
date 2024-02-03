@@ -1,7 +1,7 @@
-"carlightsystem.bcg" = 
-	generation of 
-		par "v", "v'", "p", "p'", "c", "c'", "d", "d'", "g", "g'" in 
-			"subsystem1.aut"
-			||
-			"subsystem2.aut"
-		end par;
+"carlightsystem.bcg" = 	generation of 
+			 par 
+			 "subsystem1.aut"
+			 ||
+			 "subsystem2.aut"
+			 end par;
+

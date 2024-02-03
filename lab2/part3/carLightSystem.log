@@ -7,7 +7,7 @@ svl clean info: [temporary] carlightsystem.exp
 command exit with status 0
 
 "carlightsystem.exp" =
-    par "v", "v'", "p", "p'", "c", "c'", "d", "d'", "g", "g'" in
+    par
         "subsystem1.aut"
     ||
         "subsystem2.aut"
