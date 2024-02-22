@@ -1,0 +1,59 @@
+module P1 is
+
+    type Message is Message(n: nat) end type
+    type Symptom is cough, fever, chestpain end type 
+
+    channel S is (s1: Symptom) end channel
+    channel M is (m1: Message) end channel
+
+    process Main [INCREASE, ABSCENCE:S, PSEND, RESPOND :M, ACCESS: none] is
+        var p1: Nat in
+            -- patient ID
+            p1 := 1;
+        
+            par RESPOND, PSEND in
+                Clinician [RESPOND, PSEND] 
+                ||
+                Patient [INCREASE, ABSCENCE, PSEND, RESPOND, ACCESS] (p1) 
+            end par
+        end var
+    end process
+
+
+    process Clinician [RESPOND, RECEIVE: M] is
+        var newMessage: bool in
+            newMessage := false;
+            loop
+                select
+                    RECEIVE (?any Message);
+                    newMessage := true
+                    [] 
+                    if newMessage then
+                        RESPOND (Message(2));
+                        newMessage := false
+                    end if
+                end select
+            end loop
+        end var
+    end process
+
+    process Patient [INCREASE, ABSCENCE :S, SEND, RESPOND:M, ACCESS: none] (ID: Nat) is
+        var mySymptom: Symptom, wasSicK:bool in
+            mySymptom := any Symptom;
+            wasSick := false;
+            loop
+                select
+                    mySymptom := any Symptom; INCREASE (mySymptom); 
+                    wasSick := true
+                    [] 
+                    if wasSick then 
+                        ABSCENCE (mySymptom); wasSick := false
+                    end if
+                    [] SEND (Message(ID))
+                    [] RESPOND (?any Message)
+                    [] ACCESS
+                end select
+            end loop
+        end var
+    end process
+end module

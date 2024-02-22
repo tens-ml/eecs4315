@@ -1,0 +1,92 @@
+module P2 is
+
+    type Update is Update(s: string) end type
+    type Issue is Delay, ProductMalfunction, ServiceDisatisfaction, Default with ==, != end type
+    
+    channel U is (u1: Update) end channel
+    channel I is (i1: Issue) end channel
+
+    process Main [DECLARE, RESOLVE, REVIEW: I, PROVIDE: U] is
+
+        var c1: Nat in 
+            c1 := 1;
+
+            par DECLARE, REVIEW in
+                par PROVIDE in
+                    Customer [PROVIDE, DECLARE, RESOLVE] (c1)
+                ||
+                    ServiceRepresentative [PROVIDE, REVIEW]
+                end par
+            ||
+                BackendServer[DECLARE, REVIEW]
+            end par
+
+        end var
+    end process
+
+    process BackendServer[RECEIVEISSUES, NOTIFYREQUEST: I] is 
+
+        var newIssues : bool , issueRequest : Issue in 
+            newIssues := false;
+            issueRequest := Default;
+
+            loop 
+                select
+                    RECEIVEISSUES(?issueRequest);
+                    newIssues := true
+                []
+                    if newIssues then
+                        NOTIFYREQUEST(issueRequest);
+                        newIssues := false
+                    end if
+                end select
+            end loop
+        end var
+    end process
+
+    
+    process Customer[RECEIVE: U, DECLARE, RESOLVE : I] (ID: Nat) is
+
+        var myIssue: Issue, hasIssue: bool in
+
+            myIssue := any Issue where myIssue != Default;
+            hasIssue := false;
+
+            loop
+                select
+                    myIssue := any Issue where myIssue != Default; DECLARE(myIssue);
+                    hasIssue := true
+                []
+                    if hasIssue then
+                        RESOLVE(myIssue);hasIssue := false
+                    end if
+                []
+                    RECEIVE(?any Update)
+                end select
+            end loop
+	    end var
+    end process
+
+    process ServiceRepresentative [PROVIDE: U, REVIEW: I] is
+
+        var newUpdate: bool, newIssue: Issue, mySolution: string in
+	    newUpdate := false;
+            mySolution := "None";
+	    newIssue := Default;
+
+            loop 
+                select
+                    REVIEW (?newIssue);
+                    newUpdate := true;
+                    mySolution := "My Solution"
+                []
+                    if newUpdate then
+                        PROVIDE (Update(mySolution));
+                        newUpdate := false;
+		        mySolution := "None"
+                    end if
+                end select
+            end loop
+        end var
+    end process
+end module
