@@ -1,0 +1,62 @@
+module P2 is
+
+    type Update is Update(s: string) end type
+    type Issue is delay, product-malfunction, service-disatisfaction end type
+
+    channel U is (u1: Update) end channel
+    channel I is (i1: Issue) end channel
+
+    process Main [DECLARE, RESOLVE, REVIEW: I, PROVIDE: U] is
+
+        var c1: Nat in 
+            c1 := 1;
+
+            par PROVIDE in
+                ServiceRepresentative [PROVIDE, REVIEW]
+            ||
+                Customer [PROVIDE, DECLARE, RESOLVE] (c1)
+            end par
+        end var
+    end process
+
+
+    process Customer[RECEIVE: U, DECLARE, RESOLVE : I] (ID: Nat) is
+
+        var myIssue: Issue, hasIssue: bool in
+
+            myIssue := any Issue;
+            hasIssue := false;
+
+            loop
+                select
+                    myIssue := any Issue; DECLARE(myIssue);
+                    hasIssue := true
+                []
+                    if hasIssue then
+                        RESOLVE(myIssue);
+                        hasIssue := false;
+                    end if
+                []
+                    RECEIVE(?any Update)
+                end select
+            end loop
+    end process
+
+    process ServiceRepresentative [PROVIDE: U, REVIEW: I] is
+
+        var newUpdate: bool in
+            newUpdate := false
+
+            loop 
+                select
+                    REVIEW (any Issue);
+                    newUpdate := true;
+                []
+                    if newUpdate then
+                        PROVIDE (Update(any string))
+                        newUpdate := false
+                    end if
+                end select
+            end loop
+        end var
+    end process
