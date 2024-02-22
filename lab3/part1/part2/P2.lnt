@@ -34,12 +34,13 @@ module P2 is
                 []
                     if hasIssue then
                         RESOLVE(myIssue);
-                        hasIssue := false;
+                        hasIssue := false
                     end if
                 []
                     RECEIVE(?any Update)
                 end select
             end loop
+        
     end process
 
     process ServiceRepresentative [PROVIDE: U, REVIEW: I] is
@@ -53,7 +54,7 @@ module P2 is
                     newUpdate := true;
                 []
                     if newUpdate then
-                        PROVIDE (Update(any string))
+                        PROVIDE (Update(any string));
                         newUpdate := false
                     end if
                 end select
