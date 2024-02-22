@@ -1,0 +1,19 @@
+module TP2 is
+
+    channel N is (n1: Nat) end channel
+
+    process Main [SEND: N, ERROR: none] is
+        var n1: Nat in
+            loop
+                n1 := 0;
+                loop L in
+                select
+                    SEND(n1); n1 := n1+1
+                []
+                    ERROR; stop
+                end select;
+                if n1 >= 4 then break L end if
+            end loop
+        end var 
+    end process
+end module
