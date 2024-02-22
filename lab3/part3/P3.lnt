@@ -1,4 +1,4 @@
-module Tabiat with ==, !=, get, set is 
+module P3 with ==, !=, get, set is 
 
 type Message is Message (n: nat) end type
 
@@ -54,7 +54,7 @@ end process
 
 
 process Main [INCREASE, ABSCENCE:S, PSEND, RESPOND :M, ACCESS: none] is
-  var p1: Nat in
+  var p1, p2: Nat in
     -- patient ID
 	p1 := 1;
     p2 := 2;
