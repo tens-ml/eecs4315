@@ -1,0 +1,73 @@
+module Tabiat with ==, !=, get, set is 
+
+type Message is Message (n: nat) end type
+
+type Symptom is cough, fever, chestpain end type 
+
+channel M is (m1: Message) end channel
+channel S is (s1: Symptom) end channel
+
+
+process Clinician [RESPOND, RECEIVE: M] is
+  var newMessage: bool in
+    newMessage := false;
+    loop
+      select
+        RECEIVE (?any Message);
+        newMessage := true
+      [] 
+        if newMessage then
+          RESPOND (Message(2));
+          newMessage := false
+        end if
+      end select
+    end loop
+  end var
+end process
+
+
+process Patient [INCREASE, ABSCENCE :S, 
+                 SEND, RESPOND :M, 
+                 ACCESS: none] (ID: Nat) is
+                 
+var mySymptom: Symptom, wasSicK:bool in
+	mySymptom := any Symptom;
+	wasSick := false;
+	loop
+      select
+        mySymptom := any Symptom;
+        INCREASE (mySymptom);
+        wasSick := true
+      [] 
+        if wasSick then 
+          ABSCENCE (mySymptom);
+          wasSick := false
+        end if
+      [] SEND (Message(ID))
+      [] RESPOND (?any Message)
+      [] ACCESS
+      end select
+    end loop
+end var
+end process
+
+
+
+process Main [INCREASE, ABSCENCE:S, PSEND, RESPOND :M, ACCESS: none] is
+  var p1: Nat in
+    -- patient ID
+	p1 := 1;
+    p2 := 2;
+
+	par RESPOND, PSEND in 
+      par   Patient [INCREASE, ABSCENCE, PSEND, RESPOND, ACCESS] (p1)     
+	  ||    Patient [INCREASE, ABSCENCE, PSEND, RESPOND, ACCESS] (p2)     
+      end par
+    ||   
+      Clinician [RESPOND, PSEND]  
+	end par
+  end var
+end process
+
+
+end module
