@@ -1,8 +1,8 @@
 module P2 is
 
     type Update is Update(s: string) end type
-    type Issue is delay, product-malfunction, service-disatisfaction end type
-
+    type Issue is Delay, ProductMalfunction, ServiceDisatisfaction end type
+    
     channel U is (u1: Update) end channel
     channel I is (i1: Issue) end channel
 
@@ -33,31 +33,36 @@ module P2 is
                     hasIssue := true
                 []
                     if hasIssue then
-                        RESOLVE(myIssue);
-                        hasIssue := false
+                        RESOLVE(myIssue);hasIssue := false
                     end if
                 []
                     RECEIVE(?any Update)
                 end select
             end loop
-        
+	end var
     end process
 
     process ServiceRepresentative [PROVIDE: U, REVIEW: I] is
 
-        var newUpdate: bool in
-            newUpdate := false
+        var newUpdate: bool, currentReview: Issue, mySolution: string in
+            
+	    newUpdate := false;
+            currentReview := any Issue;
+            mySolution := "None";
 
             loop 
                 select
-                    REVIEW (any Issue);
+                    REVIEW (currentReview);
                     newUpdate := true;
+                    mySolution := "My Solution"
                 []
                     if newUpdate then
-                        PROVIDE (Update(any string));
-                        newUpdate := false
+                        PROVIDE (Update(mySolution));
+                        newUpdate := false;
+		                mySolution := "None"
                     end if
                 end select
             end loop
         end var
     end process
+end module
