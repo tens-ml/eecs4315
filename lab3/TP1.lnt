@@ -8,6 +8,7 @@ module TP1 is
                 n := 0;
                 while (n < 4) loop
                 select ERROR; stop [] SEND(n); n := n + 1 end select
+                end loop
             end loop
         end var
     end process
