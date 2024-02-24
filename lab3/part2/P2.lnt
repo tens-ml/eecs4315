@@ -2,7 +2,7 @@ module P2 is
 
     type Update is Update(s: string) end type
     type Issue is Delay, ProductMalfunction, ServiceDisatisfaction, Default with ==, != end type
-    
+
     channel U is (u1: Update) end channel
     channel I is (i1: Issue) end channel
 
@@ -44,7 +44,7 @@ module P2 is
         end var
     end process
 
-    
+
     process Customer[RECEIVE: U, DECLARE, RESOLVE : I] (ID: Nat) is
 
         var myIssue: Issue, hasIssue: bool in
@@ -53,7 +53,7 @@ module P2 is
             hasIssue := false;
 
             loop
-                par
+                select
                     myIssue := any Issue where myIssue != Default; DECLARE(myIssue);
                     hasIssue := true
                 []
@@ -70,15 +70,15 @@ module P2 is
     process ServiceRepresentative [PROVIDE: U, REVIEW: I] is
 
         var newUpdate: bool, newIssue: Issue, mySolution: string in
-	        newUpdate := false;
+	    newUpdate := false;
             mySolution := "None";
-	        newIssue := Default;
+	    newIssue := Default;
 
             loop 
                 select
                     REVIEW (?newIssue);
                     newUpdate := true;
-                    mySolution := "My Update/Solution"
+                    mySolution := "My Solution"
                 []
                     if newUpdate then
                         PROVIDE (Update(mySolution));
