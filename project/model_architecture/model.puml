@@ -1,0 +1,29 @@
+@startuml
+package "Moodle System" {
+    component [User Management] as UM
+    component [Course Management System] as CMS
+    component [Assessment Management System] as AMS
+    component [Grading System] as GS
+}
+
+actor Students
+actor Administrators
+actor Professors
+
+Students --> UM : "Login"
+Administrators --> UM : "Login"
+Professors --> UM : "Login"
+
+UM --> CMS : "Authenticates All"
+UM --> AMS : "Authenticates All"
+UM --> GS : "Authenticates All"
+
+Administrators -right-> CMS : "Create Courses"
+Administrators -down-> CMS : "Enroll Students"
+Students -down-> CMS : "View/Access Courses"
+Professors -right-> AMS : "Assign Assessments"
+Students -left-> AMS : "Complete Assessments"
+AMS --> Professors : "Assessment Submissions"
+Professors --> GS : "Grade Assessments"
+GS --> Students : "Notify Grades"
+@enduml
