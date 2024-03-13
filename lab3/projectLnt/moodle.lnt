@@ -9,25 +9,44 @@ module moodle is
 
 
 
-    process Main [ASSIGN: courseChannel, UPSERTASSESSMENT: assessmentChannel] is
-            par ASSIGN in         
-                SystemAdmin [ASSIGN]
+    process Main [ENROLL, ASSIGN: courseChannel, VIEWASSESSMENT, UPSERTASSESSMENT: assessmentChannel] is
+            par      
+                ASSIGN,ENROLL -> SystemAdmin [ASSIGN, ENROLL]
             ||    
-                Instructor [ASSIGN, UPSERTASSESSMENT]
+                ASSIGN -> Instructor[ASSIGN, UPSERTASSESSMENT]
+            ||
+                ENROLL -> Student[ENROLL,VIEWASSESSMENT]
             end par
     end process
 
-    process SystemAdmin[ASSIGN:courseChannel] is 
+    process SystemAdmin[ASSIGN, ENROLL:courseChannel] is 
         loop
             var c: course in 
                 c := any course where c != empty;
-                ASSIGN(c)
-            end var
+		select  
+                 ASSIGN(c)
+                [] ENROLL(c)
+            	end select
+	    end var
         end loop
     end process
 
+    process Student [RECEIVEENROLLMENT: courseChannel, VIEWASSESSMENT: assessmentChannel] is 
+        var c: course, a:assessment in
+            c:= empty;
+            a:= empty;
+            loop 
+                select 
+                    RECEIVEENROLLMENT(?c)
+                []
+		    if c != empty then
+	                VIEWASSESSMENT(a)
+		    end if
+                end select
+            end loop
+        end var
+    end process
   
-
     process Instructor[RECEIVECOURSE: courseChannel, UPSERTASSESSMENT: assessmentChannel] is 
         
         var c: course, a: assessment in         
@@ -37,11 +56,11 @@ module moodle is
                         RECEIVECOURSE(?c)
                 []
                         if c != empty then 
-				            -- How to do this better?
+		            -- TODO: How to code this better?
                             select 
                                 a := quiz [] a:= midterm [] a := assignment
                             end select;	    
-				            UPSERTASSESSMENT(a)			    
+			                UPSERTASSESSMENT(a)			    
                         end if 
                 end select
             end loop
