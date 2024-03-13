@@ -1,0 +1,49 @@
+module moodle is
+
+    type course is eecs, humanities, science, arts, empty end type
+
+    type assessment is quiz, midterm, assignment, empty end type with ==, !=
+
+    type assessmentChannel is (a: assessment) end channel
+    channel courseChannel is (c: course) end channel
+
+
+
+    process Main [ASSIGN: courseChannel, UPSERTASSESSMENT: assessmentChannel] is
+            par ASSIGN in         
+                SystemAdmin [ASSIGN]
+            ||    
+                Instructor [ASSIGN, UPSERTASSESSMENT]
+            end par
+    end process
+
+    process SystemAdmin[ASSIGN:courseChannel] is 
+        loop
+            var c: course in 
+                c := any course where c != empty;
+                ASSIGN(c)
+            end var
+        end loop
+    end process
+
+    process 
+
+    process Instructor[RECEIVECOURSE: courseChannel, UPSERTASSESSMENT: assessment] is 
+        loop 
+            var c: course, assessment: assessment in 
+                c:= empty;
+                a:= any assessment where a != empty;
+                select 
+                    RECEIVECOURSE(?course);
+                []
+                    if course != empty then 
+                        UPSERTASSESSMENT(assessment)
+                    end if 
+                end select
+            end var
+        end loop
+
+    end process
+
+
+end module
