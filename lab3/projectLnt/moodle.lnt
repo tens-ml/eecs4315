@@ -11,16 +11,24 @@ module moodle is
     channel contentChannel is (c: content) end channel
 
 
-    process Main [ENROLL, ASSIGN: courseChannel, VIEWCONTENT: contentChannel, UPSERTASSESSMENT: assessmentChannel] is
+    process Main [ENROLL, ASSIGN: courseChannel, VIEWCONTENT: contentChannel, VIEWASSESSMENT, ANNOUNCEASSESSMENT,UPSERTASSESSMENT: assessmentChannel] is
+        var s1, i1: nat in 
+            s1 := 1;
+            i1 := 1;    
+
             par      
                 ASSIGN,ENROLL -> SystemAdmin[ASSIGN, ENROLL]
             ||    
-                ASSIGN -> Instructor[ASSIGN, UPSERTASSESSMENT]
+                ASSIGN, UPSERTASSESSMENT -> Instructor[ASSIGN, UPSERTASSESSMENT](i1)
             ||
-                ENROLL -> Student[ENROLL,VIEWCONTENT]
+                ENROLL, ANNOUNCEASSESSMENT -> Student[ENROLL,VIEWCONTENT, ANNOUNCEASSESSMENT, VIEWASSESSMENT](s1)
+            ||
+                UPSERTASSESSMENT, ANNOUNCEASSESSMENT -> CourseManagement[UPSERTASSESSMENT, ANNOUNCEASSESSMENT]
             end par
+        end var
     end process
 
+    -- USER BEHAVIOURS
     process SystemAdmin[ASSIGN, ENROLL:courseChannel] is 
         loop
             var c: course in 
@@ -33,23 +41,30 @@ module moodle is
         end loop
     end process
 
-    process Student [RECEIVEENROLLMENT: courseChannel, VIEWCONTENT: contentChannel] is 
-        var c: course, courseContent: content in
+    process Student [RECEIVEENROLLMENT: courseChannel, VIEWCONTENT: contentChannel, RECEIVEASSESSMENT, VIEWASSESSMENT: assessmentChannel](studentId: nat) is 
+        var c: course, a: assessment, courseContent: content in
             c:= empty;
+            a:= empty;
             courseContent:= empty;
             loop 
                 select 
                     RECEIVEENROLLMENT(?c)
                 []
-		    if c != empty then
-	                VIEWCONTENT(courseContent)
-		    end if
+                    if c != empty then
+                        VIEWCONTENT(courseContent)
+                    end if
+                []
+                    RECEIVEASSESSMENT(?a)
+                []
+                    if a != empty then
+                        VIEWASSESSMENT(a)
+                    end if
                 end select
             end loop
         end var
     end process
   
-    process Instructor[RECEIVECOURSE: courseChannel, UPSERTASSESSMENT: assessmentChannel] is 
+    process Instructor[RECEIVECOURSE: courseChannel, UPSERTASSESSMENT: assessmentChannel](instructorId: nat) is 
         
         var c: course, a: assessment in         
             c:= empty;
@@ -69,5 +84,21 @@ module moodle is
         end var
     end process
 
+    -- INTERNAL SUBSYSTEMS
+    process CourseManagement[RECEIVEASSESSMENT, ANNOUNCEASSESSMENT: assessmentChannel] is
+        var a: assessment in 
+            a := empty;
+            loop
+                select
+                    RECEIVEASSESSMENT(?a) 
+                []
+                    if a != empty then
+                        ANNOUNCEASSESSMENT(a);
+                        a := empty 
+                    end if
+                end select
+            end loop
+        end var
+    end process
 
 end module
