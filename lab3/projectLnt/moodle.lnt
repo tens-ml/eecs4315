@@ -29,19 +29,24 @@ module moodle is
   
 
     process Instructor[RECEIVECOURSE: courseChannel, UPSERTASSESSMENT: assessmentChannel] is 
-        loop 
-            var c: course, a: assessment in 
-                c:= empty;
-                a:= any assessment where a != empty;
+        
+        var c: course, a: assessment in         
+            c:= empty;
+            loop
                 select 
-                    RECEIVECOURSE(?c)
+                        RECEIVECOURSE(?c)
                 []
-                    if c != empty then 
-                        UPSERTASSESSMENT(a)
-                    end if 
+                        if c != empty then 
+				            -- How to do this better?
+                            select 
+                                a := quiz [] a:= midterm [] a := assignment
+                            end select;	    
+				            UPSERTASSESSMENT(a)			    
+                        end if 
                 end select
-            end var
-        end loop
-
+            end loop
+        end var
     end process
+
+
 end module
