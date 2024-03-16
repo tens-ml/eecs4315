@@ -1,0 +1,196 @@
+module moodle is
+    type course is eecs, humanities, science, arts, empty with ==, != end type
+    type assessment is quiz, midterm, assignment, empty with ==, != end type 
+    type content is lecture, video, empty with ==, != end type
+
+    type grade is pass, fail with ==, != end type
+    type gradedAssessment is tuple(a: assessment, g: grade) with get, set, ==, != end type 
+
+    channel gradedAssessmentChannel is (ga: gradedAssessment), () end channel
+    channel assessmentChannel is (a: assessment) end channel
+    channel courseChannel is (c: course) end channel
+    channel contentChannel is (c: content) end channel
+    channel boolChannel is (b: bool) end channel
+
+    process Main [ENROLL, ASSIGN: courseChannel, SERVECONTENT, UPSERTCONTENT, VIEWCONTENT: contentChannel, VIEWASSESSMENT, ANNOUNCEASSESSMENT, UPSERTASSESSMENT: assessmentChannel,
+        SUBMITASSESSMENT, FORWARDSUBMISSION: assessmentChannel, GRADEASSESSMENT: gradedAssessmentChannel, RECEIVESUBMISSION: boolChannel] is
+        var s1, i1: nat in 
+            s1 := 1;
+            i1 := 1;    
+
+            -- TODO: Decide what actions to hide (internal actions)
+            par      
+                ASSIGN,ENROLL -> SystemAdmin[ASSIGN, ENROLL]
+            ||    
+                ENROLL, ANNOUNCEASSESSMENT, SERVECONTENT, SUBMITASSESSMENT, RECEIVESUBMISSION, GRADEASSESSMENT -> Student[ENROLL, SERVECONTENT, VIEWCONTENT, ANNOUNCEASSESSMENT, VIEWASSESSMENT, SUBMITASSESSMENT, GRADEASSESSMENT, RECEIVESUBMISSION](s1)
+            ||
+                ASSIGN, UPSERTASSESSMENT, UPSERTCONTENT, GRADEASSESSMENT, FORWARDSUBMISSION -> Instructor[ASSIGN, UPSERTASSESSMENT, FORWARDSUBMISSION, UPSERTCONTENT, GRADEASSESSMENT](i1)
+            ||
+                UPSERTASSESSMENT, ANNOUNCEASSESSMENT, SERVECONTENT, UPSERTCONTENT -> CourseManagement[UPSERTASSESSMENT, ANNOUNCEASSESSMENT, SERVECONTENT, UPSERTCONTENT]
+            ||
+                SUBMITASSESSMENT, FORWARDSUBMISSION, RECEIVESUBMISSION -> AssessmentManagement[SUBMITASSESSMENT, FORWARDSUBMISSION, RECEIVESUBMISSION]
+            end par
+        end var
+    end process
+
+    -- USER BEHAVIOURS
+    process SystemAdmin[ASSIGN, ENROLL:courseChannel] is 
+        loop
+            var c: course in 
+                c := any course where c != empty;
+		        select  
+                    -- assign course to instructor
+                    ASSIGN(c)
+                [] 
+                    -- enroll student in course
+                    ENROLL(c)
+            	end select
+	        end var
+        end loop
+    end process
+
+    process Student [
+        ENROLL: courseChannel, 
+        SERVECONTENT, VIEWCONTENT: contentChannel, 
+        ANNOUNCEASSESSMENT, VIEWASSESSMENT, SUBMITASSESSMENT: assessmentChannel,
+        GRADEASSESSMENT: gradedAssessmentChannel,
+        RECEIVESUBMISSION: boolChannel
+    ](studentId: nat) is 
+        var c: course, a: assessment, courseContent: content, ga: gradedAssessment, receivedSubmission: bool in
+            c := empty;
+            a := empty;
+            courseContent := empty;
+            receivedSubmission := false;
+            loop 
+                select 
+                    -- receive enrollment from admin
+                    ENROLL(?c)
+                []
+                    if c != empty then
+                        select 
+                            -- receive content from CMS
+                        	SERVECONTENT(?courseContent)
+                        []
+                            -- receive assessment from CMS
+                        	ANNOUNCEASSESSMENT(?a)
+                        [] 
+                            -- view content that has been received
+				            if courseContent != empty then
+					            VIEWCONTENT(courseContent)
+				            end if
+			            []
+                        	if a != empty then
+                                select
+                                    -- view assessment that has been received
+                           		    VIEWASSESSMENT(a)
+                                []
+                                    -- submit assessment that has been received
+                                    SUBMITASSESSMENT(a)
+                                end select
+                           	end if
+                        []
+                            RECEIVESUBMISSION(?receivedSubmission)
+                        []
+                            -- receive graded assessment from instructor
+                            GRADEASSESSMENT(?ga)
+                        end select
+                    end if
+                end select
+            end loop
+        end var
+    end process
+  
+    process Instructor[
+        RECEIVECOURSE: courseChannel, 
+        UPSERTASSESSMENT, FORWARDSUBMISSION: assessmentChannel, 
+        UPSERTCONTENT: contentChannel, 
+        GRADEASSESSMENT: gradedAssessmentChannel
+    ] (instructorId: nat) is 
+        var c: course, submission: assessment in         
+            c := empty;
+            submission := empty;
+            loop
+                select 
+                    -- receive course from admin
+                    RECEIVECOURSE(?c)
+                []
+                    -- post course content/assessments to CMS
+                    if c != empty then 
+                        select 
+                            UPSERTASSESSMENT(quiz) 
+                        [] 
+                            UPSERTASSESSMENT(midterm) 
+                        [] 
+                            UPSERTASSESSMENT(assignment) 
+                        []
+                            UPSERTCONTENT(lecture)
+                        []
+                            UPSERTCONTENT(video)
+                        []
+                            -- receive submission from assessment system
+                            FORWARDSUBMISSION(?submission)
+                        []
+                            -- grade assessment if one exists (pass/fail), send graded to student
+                            if submission != empty then
+                                select
+                                    GRADEASSESSMENT(tuple(submission, pass))
+                                []
+                                    GRADEASSESSMENT(tuple(submission, fail))
+                                end select
+                            end if
+                        end select  		    
+                    end if 
+                end select
+            end loop
+        end var
+    end process
+
+    -- INTERNAL SUBSYSTEMS
+    process CourseManagement[RECEIVEASSESSMENT, ANNOUNCEASSESSMENT: assessmentChannel, SERVECONTENT, UPSERTCONTENT: contentChannel] is
+        var a: assessment, courseContent: content in 
+            a := empty;
+	        courseContent := empty;
+            loop
+                select
+                    -- receive assessment from instructor
+                    RECEIVEASSESSMENT(?a)
+                []
+                    -- receive content from instructor
+                    UPSERTCONTENT(?courseContent)
+		        []
+                    -- forward assessment to student
+                	if a != empty then
+                        ANNOUNCEASSESSMENT(a);
+                        a := empty
+			        end if 
+		        []
+                    -- forward content to student
+                    if courseContent != empty then
+                        SERVECONTENT(courseContent);
+                        courseContent := empty
+                    end if
+                end select
+            end loop
+        end var
+    end process
+
+    process AssessmentManagement[SUBMITASSESSMENT, FORWARDSUBMISSION: assessmentChannel, RECEIVESUBMISSION: boolChannel] is
+        var submission: assessment in
+            submission := empty;
+            loop
+                select 
+                    -- receive submission from student
+                    SUBMITASSESSMENT(?submission);
+
+                    -- acknowledge receipt to student
+                    RECEIVESUBMISSION(true)
+                []
+                    -- forward to instructor once received
+                    if submission != empty then
+                        FORWARDSUBMISSION(submission)
+                    end if
+                end select
+            end loop
+        end var
+    end process
+end module
