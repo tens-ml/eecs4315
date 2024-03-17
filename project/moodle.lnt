@@ -1,9 +1,12 @@
 module moodle is
+
+
     type course is eecs, humanities, science, arts, empty with ==, != end type
     type assessment is quiz, midterm, assignment, empty with ==, != end type 
     type content is lecture, video, empty with ==, != end type
+    type announcement is update, reminder, empty with ==, != end type
 
-    type grade is pass, fail with ==, != end type
+    type grade is pass, fail with ==, != end type   
     type gradedAssessment is tuple(a: assessment, g: grade) with get, set, ==, != end type 
 
     channel gradedAssessmentChannel is (ga: gradedAssessment), () end channel
@@ -11,9 +14,12 @@ module moodle is
     channel courseChannel is (c: course) end channel
     channel contentChannel is (c: content) end channel
     channel boolChannel is (b: bool) end channel
+    channel announcementChannel is (a:announcement) end channel
 
-    process Main [ENROLL, ASSIGN: courseChannel, SERVECONTENT, UPSERTCONTENT, VIEWCONTENT: contentChannel, VIEWASSESSMENT, ANNOUNCEASSESSMENT, UPSERTASSESSMENT: assessmentChannel,
-        SUBMITASSESSMENT, FORWARDSUBMISSION: assessmentChannel, GRADEASSESSMENT: gradedAssessmentChannel, RECEIVESUBMISSION: boolChannel] is
+    process Main [ENROLL, ASSIGN: courseChannel, SERVECONTENT, UPSERTCONTENT, VIEWCONTENT: contentChannel, 
+                VIEWASSESSMENT, ANNOUNCEASSESSMENT, UPSERTASSESSMENT: assessmentChannel,
+                SUBMITASSESSMENT, FORWARDSUBMISSION: assessmentChannel, 
+                GRADEASSESSMENT: gradedAssessmentChannel, RECEIVESUBMISSION: boolChannel, ANNOUNCEINFO, SENDINFO: announcementChannel] is
         var s1, i1: nat in 
             s1 := 1;
             i1 := 1;    
@@ -22,11 +28,11 @@ module moodle is
             par      
                 ASSIGN,ENROLL -> SystemAdmin[ASSIGN, ENROLL]
             ||    
-                ENROLL, ANNOUNCEASSESSMENT, SERVECONTENT, SUBMITASSESSMENT, RECEIVESUBMISSION, GRADEASSESSMENT -> Student[ENROLL, SERVECONTENT, VIEWCONTENT, ANNOUNCEASSESSMENT, VIEWASSESSMENT, SUBMITASSESSMENT, GRADEASSESSMENT, RECEIVESUBMISSION](s1)
+                ENROLL, ANNOUNCEASSESSMENT, SERVECONTENT, SUBMITASSESSMENT, RECEIVESUBMISSION, GRADEASSESSMENT, ANNOUNCEINFO -> Student[ENROLL, SERVECONTENT, VIEWCONTENT, ANNOUNCEASSESSMENT, VIEWASSESSMENT, SUBMITASSESSMENT, GRADEASSESSMENT, RECEIVESUBMISSION, ANNOUNCEINFO](s1)
             ||
-                ASSIGN, UPSERTASSESSMENT, UPSERTCONTENT, GRADEASSESSMENT, FORWARDSUBMISSION -> Instructor[ASSIGN, UPSERTASSESSMENT, FORWARDSUBMISSION, UPSERTCONTENT, GRADEASSESSMENT](i1)
+                ASSIGN, UPSERTASSESSMENT, UPSERTCONTENT, GRADEASSESSMENT, FORWARDSUBMISSION, SENDINFO -> Instructor[ASSIGN, UPSERTASSESSMENT, FORWARDSUBMISSION, UPSERTCONTENT, GRADEASSESSMENT, SENDINFO](i1)
             ||
-                UPSERTASSESSMENT, ANNOUNCEASSESSMENT, SERVECONTENT, UPSERTCONTENT -> CourseManagement[UPSERTASSESSMENT, ANNOUNCEASSESSMENT, SERVECONTENT, UPSERTCONTENT]
+                UPSERTASSESSMENT, ANNOUNCEASSESSMENT, SERVECONTENT, UPSERTCONTENT, ANNOUNCEINFO, SENDINFO-> CourseManagement[UPSERTASSESSMENT, ANNOUNCEASSESSMENT, SERVECONTENT, UPSERTCONTENT, ANNOUNCEINFO, SENDINFO]
             ||
                 SUBMITASSESSMENT, FORWARDSUBMISSION, RECEIVESUBMISSION -> AssessmentManagement[SUBMITASSESSMENT, FORWARDSUBMISSION, RECEIVESUBMISSION]
             end par
@@ -54,11 +60,12 @@ module moodle is
         SERVECONTENT, VIEWCONTENT: contentChannel, 
         ANNOUNCEASSESSMENT, VIEWASSESSMENT, SUBMITASSESSMENT: assessmentChannel,
         GRADEASSESSMENT: gradedAssessmentChannel,
-        RECEIVESUBMISSION: boolChannel
+        RECEIVESUBMISSION: boolChannel, RECEIVEANNOUNCEMENT: announcementChannel
     ](studentId: nat) is 
-        var c: course, a: assessment, courseContent: content, ga: gradedAssessment, receivedSubmission: bool in
+        var c: course, a: assessment, courseContent: content, ga: gradedAssessment, receivedSubmission: bool, info: announcement in
             c := empty;
             a := empty;
+            info := empty;
             courseContent := empty;
             receivedSubmission := false;
             loop 
@@ -93,6 +100,9 @@ module moodle is
                         []
                             -- receive graded assessment from instructor
                             GRADEASSESSMENT(?ga)
+                        [] 
+                            -- receive instructor announcement from CMS
+                            RECEIVEANNOUNCEMENT(?info)
                         end select
                     end if
                 end select
@@ -104,9 +114,9 @@ module moodle is
         RECEIVECOURSE: courseChannel, 
         UPSERTASSESSMENT, FORWARDSUBMISSION: assessmentChannel, 
         UPSERTCONTENT: contentChannel, 
-        GRADEASSESSMENT: gradedAssessmentChannel
+        GRADEASSESSMENT: gradedAssessmentChannel, SENDINFO: announcementChannel
     ] (instructorId: nat) is 
-        var c: course, submission: assessment in         
+        var c: course, submission: assessment, info: announcement in         
             c := empty;
             submission := empty;
             loop
@@ -138,6 +148,10 @@ module moodle is
                                     GRADEASSESSMENT(tuple(submission, fail))
                                 end select
                             end if
+                        []
+                            SENDINFO(update)
+                        []
+                            SENDINFO(reminder)
                         end select  		    
                     end if 
                 end select
@@ -146,9 +160,10 @@ module moodle is
     end process
 
     -- INTERNAL SUBSYSTEMS
-    process CourseManagement[RECEIVEASSESSMENT, ANNOUNCEASSESSMENT: assessmentChannel, SERVECONTENT, UPSERTCONTENT: contentChannel] is
-        var a: assessment, courseContent: content in 
+    process CourseManagement[RECEIVEASSESSMENT, ANNOUNCEASSESSMENT: assessmentChannel, SERVECONTENT, UPSERTCONTENT: contentChannel, ANNOUNCEINFO, RECEIVEINFO: announcementChannel] is
+        var a: assessment, courseContent: content, info: announcement in 
             a := empty;
+            info := empty;
 	        courseContent := empty;
             loop
                 select
@@ -169,6 +184,14 @@ module moodle is
                         SERVECONTENT(courseContent);
                         courseContent := empty
                     end if
+                []
+                    RECEIVEINFO(?info)
+                []
+                    -- forward announcement to student
+                    if info != empty then 
+                        ANNOUNCEINFO(info);
+                        info := empty
+                    end if 
                 end select
             end loop
         end var
@@ -187,7 +210,8 @@ module moodle is
                 []
                     -- forward to instructor once received
                     if submission != empty then
-                        FORWARDSUBMISSION(submission)
+                        FORWARDSUBMISSION(submission);
+                        submission := empty
                     end if
                 end select
             end loop
