@@ -60,19 +60,18 @@ module moodle is
     process SystemAdmin[
         ENROLL: enrollmentChannel,
         ASSIGN: courseChannel
-    ]
-    (students: natList) is 
+    ] (students: natList) is 
         loop
             var c: course in 
                 c := any course where c != empty;
-		        select  
+                select  
                     -- assign some course to instructor
                     ASSIGN(c)
                 [] 
                     -- enroll next student in some course (next student = first in student list; sequential enrollment)
                     ENROLL(c, head(students))
-            	end select
-	        end var
+                end select
+            end var
         end loop
     end process
 
@@ -99,27 +98,27 @@ module moodle is
                     end var
                 []
                     if c != empty then
-                        select 
+                        select
                             -- receive content from CMS
-                        	SERVECONTENT(?courseContent)
+                            SERVECONTENT(?courseContent)
                         []
                             -- receive assessment from CMS
-                        	ANNOUNCEASSESSMENT(?a)
-                        [] 
+                            ANNOUNCEASSESSMENT(?a)
+                        []
                             -- view content that has been received
-				            if courseContent != empty then
-					            VIEWCONTENT(courseContent)
-				            end if
+                            if courseContent != empty then
+                                VIEWCONTENT(courseContent)
+                            end if
 			            []
                         	if a != empty then
                                 select
                                     -- view assessment that has been received
-                           		    VIEWASSESSMENT(a)
+                                    VIEWASSESSMENT(a)
                                 []
                                     -- submit assessment that has been received
                                     SUBMITASSESSMENT(a, studentId)
                                 end select
-                           	end if
+                            end if
                         []
                             -- receipt from AMS after submission
                             RECEIVESUBMISSION(?receivedSubmission)
@@ -208,7 +207,7 @@ module moodle is
         var a: assessment, courseContent: content, info: announcement in 
             a := empty;
             info := empty;
-	        courseContent := empty;
+            courseContent := empty;
             loop
                 select
                     -- receive assessment from instructor
@@ -218,10 +217,10 @@ module moodle is
                     UPSERTCONTENT(?courseContent)
 		        []
                     -- forward assessment to student
-                	if a != empty then
+                    if a != empty then
                         ANNOUNCEASSESSMENT(a);
                         a := empty
-			        end if 
+                    end if 
 		        []
                     -- forward content to student
                     if courseContent != empty then
