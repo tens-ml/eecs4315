@@ -109,8 +109,8 @@ module moodle is
                             if courseContent != empty then
                                 VIEWCONTENT(courseContent)
                             end if
-			            []
-                        	if a != empty then
+                        []
+                            if a != empty then
                                 select
                                     -- view assessment that has been received
                                     VIEWASSESSMENT(a)
@@ -215,13 +215,13 @@ module moodle is
                 []
                     -- receive content from instructor
                     UPSERTCONTENT(?courseContent)
-		        []
+                []
                     -- forward assessment to student
                     if a != empty then
                         ANNOUNCEASSESSMENT(a);
                         a := empty
                     end if 
-		        []
+                []
                     -- forward content to student
                     if courseContent != empty then
                         SERVECONTENT(courseContent);
