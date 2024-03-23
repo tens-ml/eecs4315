@@ -1,0 +1,7 @@
+(* A student must never receive any content if they havent enrolled in a course *)
+
+macro NEVER (R) =
+[ (R) ] false
+end_macro
+
+NEVER(true* . not({ENROLL...}) . (SERVECONTENT or VIEWCONTENT))

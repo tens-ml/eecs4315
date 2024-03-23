@@ -1,0 +1,7 @@
+(* Instructor may never grade assignments if they havent received any *)
+
+macro NEVER (R) =
+[ (R) ] false
+end_macro
+
+NEVER(true* . not({FORWARDSUBMISSION...}) . {GRADEASSESSMENT...})
