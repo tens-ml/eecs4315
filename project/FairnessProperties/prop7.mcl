@@ -1,0 +1,15 @@
+(* FAIRNESS PROPERTY 1: Every student who has been enrolled in a course and has submitted all required assessments should eventually receive their final grade. *)
+
+macro SOME (R) =
+    < (R) > true
+end_macro
+
+macro FAIRLY (A) =
+    [ (not (A))* ] SOME (true* . (A))
+end_macro
+
+macro AFTER_1_FAIRLY_2 (A, B) =
+    [ true* . (A) ] FAIRLY (B)
+end_macro
+
+AFTER_1_FAIRLY_2 (SUBMITASSESSMENT, GRADEASSESSMENT)
