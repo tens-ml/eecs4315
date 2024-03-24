@@ -1,0 +1,6 @@
+(* SAFETY PROPERTY 3: No upserts of course content, announcement, or assessments can be made unless the instructor is currently assigned to a course *)
+(* This is a 'manual' version of the NOT_1_BEFORE_2 macro  *)
+
+macro UPSERT () = (UPSERTASSESSMENT or UPSERTCONTENT or SENDINFO) end_macro
+
+[ (not (ASSIGN))* . (UPSERT) ] false

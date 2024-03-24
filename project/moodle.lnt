@@ -89,6 +89,7 @@ module moodle is
             info := empty;
             courseContent := empty;
             receivedSubmission := false;
+            use info; use receivedSubmission;
             loop 
                 select 
                     -- receive enrollment from admin (if id matches)
@@ -121,13 +122,16 @@ module moodle is
                             end if
                         []
                             -- receipt from AMS after submission
-                            RECEIVESUBMISSION(?receivedSubmission)
+                            RECEIVESUBMISSION(?receivedSubmission);
+                            use receivedSubmission -- remove warning
                         []
                             -- receive graded assessment from instructor
-                            GRADEASSESSMENT(?ga)
+                            GRADEASSESSMENT(?ga);
+                            use ga -- remove warning
                         [] 
                             -- receive instructor announcement from CMS
-                            RECEIVEANNOUNCEMENT(?info)
+                            RECEIVEANNOUNCEMENT(?info);
+                            use info -- remove warning
                         end select
                     end if
                 end select

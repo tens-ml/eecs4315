@@ -1,4 +1,4 @@
-(* A student must never receive any content if they havent enrolled in a course *)
+(* SAFETY PROPERTY 1: A student must never receive any content if they havent enrolled in a course *)
 
 macro NEVER (R) =
 [ (R) ] false
