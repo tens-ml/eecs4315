@@ -1,22 +1,28 @@
 (* LIVENESS PROPERTY 3: 
     Inevitably, When a student submits an assessment, the assessment subsystem will only 
-    notify the Instructor once [FALSE CURRENTLY]
+    notify the Instructor once i.e., you cannot spam the instructor with notifications
+    [FALSE CURRENTLY]
 *)
 
-macro INEVITABLE_1_TIMES_2 (A, N) =
-    mu X (C:Nat := N) . ((C > 0) implies (
-        (< (A) > true or < not (A) > X (C)) and
-        [ (A) ] X (C - 1) and [ not (A) ] X (C)
-    ))
+
+macro NEVER (R) =
+    [ (R) ] false
 end_macro
 
-macro INEVITABLE_1_WHERE_2 (A, P) =
-    mu X . ((< (A) > true or < not (A) > X) and [ (A) ] (P) and [ not (A) ] X)
+macro INEVITABLE (A) =
+    mu X . ((< (A) > true or < not (A) > X) and [ not (A) ] X)
 end_macro
 
-macro INEVITABLE_1_THEN_2_TIMES_2 (A, B, N) =
-    INEVITABLE_1_WHERE_2 (A, INEVITABLE_1_TIMES_2 (B, N))
+macro AFTER_1_INEVITABLE_2 (A, B) =
+    [ true* . (A) ] INEVITABLE (B)
 end_macro
 
 
-INEVITABLE_1_THEN_2_TIMES_2(SUBMITASSESSMENT, FORWARDSUBMISSION, 1)
+macro ENSURE_NOTIFICATION_ONCE_POST_SUBMISSION(S, N) =
+    AFTER_1_INEVITABLE_2(S, N) and
+    NEVER (N . true* . N)
+end_macro
+
+
+
+ENSURE_NOTIFICATION_ONCE_POST_SUBMISSION(SUBMITASSESSMENT, FORWARDSUBMISSION)

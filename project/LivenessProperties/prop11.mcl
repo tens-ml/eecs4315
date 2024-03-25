@@ -1,0 +1,4 @@
+(* LIVENESS PROPERTY 3: 
+    Inevitably, for any upserts, the course management shall notify the students only once.
+*)
+
