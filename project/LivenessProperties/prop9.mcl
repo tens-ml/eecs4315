@@ -1,0 +1,15 @@
+(* SAFETY PROPERTY: 
+    A student cannot view content unless the course managemenet has servd it  
+*)
+
+macro NEVER (R) =
+    [ (R) ] false
+end_macro
+
+macro NOT_1_TO_2_UNLESS_3 (A, B, C) =
+    NEVER (true* . (A) . (not (C))* . (B))
+end_macro
+
+
+NOT_1_TO_2_UNLESS_3(UPSERTCONTENT, VIEWCONTENT, SERVECONTENT)
+
