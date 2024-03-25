@@ -69,7 +69,8 @@ module moodleV1 is
                     ASSIGN(c)
                 [] 
                     -- enroll next student in some course (next student = first in student list; sequential enrollment)
-                    ENROLL(c, head(students))
+                    ENROLL(c, head(students));
+                    students := tail(students)
                 end select
             end var
         end loop
