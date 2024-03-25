@@ -1,0 +1,269 @@
+module moodleV1 is
+    type natList is list of nat with head, tail, member, empty end type
+    type course is eecs, humanities, science, arts, empty with ==, != end type
+    type assessment is quiz, midterm, assignment, empty with ==, != end type 
+    type content is lecture, video, empty with ==, != end type
+    type announcement is update, reminder, empty with ==, != end type
+    type grade is pass, fail with ==, != end type   
+    type gradedAssessment is tuple(a: assessment, g: grade) with get, set, ==, != end type 
+    type assessmentList is list of assessment with head, tail, member, empty end type 
+
+    channel gradedAssessmentChannel is (ga: gradedAssessment), () end channel
+    channel assessmentChannel is (a: assessment) end channel
+    channel courseChannel is (c: course) end channel
+    channel contentChannel is (c: content) end channel
+    channel boolChannel is (b: bool) end channel
+    channel announcementChannel is (a:announcement) end channel
+    channel enrollmentChannel is (c: course, sid: nat) end channel
+    channel submissionChannel is (a: assessment, sid: nat) end channel
+
+    process Main [
+        ENROLL: enrollmentChannel,
+        ASSIGN: courseChannel, 
+        SERVECONTENT, UPSERTCONTENT, VIEWCONTENT: contentChannel, 
+        VIEWASSESSMENT, ANNOUNCEASSESSMENT, UPSERTASSESSMENT: assessmentChannel,
+        SUBMITASSESSMENT, FORWARDSUBMISSION: submissionChannel, 
+        GRADEASSESSMENT: gradedAssessmentChannel, 
+        RECEIVESUBMISSION: boolChannel, 
+        ANNOUNCEINFO, SENDINFO: announcementChannel
+    ] is
+        var studentId1, studentId2: nat in 
+            studentId1 := 1;
+            studentId2 := 2;
+
+            par      
+                ENROLL, ASSIGN
+                -> SystemAdmin[ENROLL, ASSIGN] 
+                ({studentId1, studentId2})
+            ||    
+                ENROLL, ANNOUNCEASSESSMENT, SERVECONTENT, SUBMITASSESSMENT, RECEIVESUBMISSION, GRADEASSESSMENT, ANNOUNCEINFO 
+                -> Student[ENROLL, SERVECONTENT, VIEWCONTENT, ANNOUNCEASSESSMENT, VIEWASSESSMENT, SUBMITASSESSMENT, GRADEASSESSMENT, RECEIVESUBMISSION, ANNOUNCEINFO]
+                (studentId1)
+            ||    
+                ENROLL, ANNOUNCEASSESSMENT, SERVECONTENT, SUBMITASSESSMENT, RECEIVESUBMISSION, GRADEASSESSMENT, ANNOUNCEINFO 
+                -> Student[ENROLL, SERVECONTENT, VIEWCONTENT, ANNOUNCEASSESSMENT, VIEWASSESSMENT, SUBMITASSESSMENT, GRADEASSESSMENT, RECEIVESUBMISSION, ANNOUNCEINFO]
+                (studentId2)
+            ||
+                ENROLL, ASSIGN, UPSERTASSESSMENT, UPSERTCONTENT, GRADEASSESSMENT, FORWARDSUBMISSION, SENDINFO 
+                -> Instructor[ENROLL, ASSIGN, UPSERTASSESSMENT, FORWARDSUBMISSION, UPSERTCONTENT, GRADEASSESSMENT, SENDINFO]
+            ||
+                UPSERTASSESSMENT, ANNOUNCEASSESSMENT, SERVECONTENT, UPSERTCONTENT, ANNOUNCEINFO, SENDINFO
+                -> CourseManagement[UPSERTASSESSMENT, ANNOUNCEASSESSMENT, SERVECONTENT, UPSERTCONTENT, ANNOUNCEINFO, SENDINFO]
+            ||
+                SUBMITASSESSMENT, FORWARDSUBMISSION, RECEIVESUBMISSION 
+                -> AssessmentManagement[SUBMITASSESSMENT, FORWARDSUBMISSION, RECEIVESUBMISSION]
+            end par
+        end var
+    end process
+
+    -- USER BEHAVIOURS
+    process SystemAdmin[
+        ENROLL: enrollmentChannel,
+        ASSIGN: courseChannel
+    ] (students: natList) is 
+        loop
+            var c: course in 
+                c := any course where c != empty;
+                select  
+                    -- assign some course to instructor
+                    ASSIGN(c)
+                [] 
+                    -- enroll next student in some course (next student = first in student list; sequential enrollment)
+                    ENROLL(c, head(students))
+                end select
+            end var
+        end loop
+    end process
+
+    process Student [
+        ENROLL: enrollmentChannel, 
+        SERVECONTENT, VIEWCONTENT: contentChannel, 
+        ANNOUNCEASSESSMENT, VIEWASSESSMENT: assessmentChannel,
+        SUBMITASSESSMENT: submissionChannel,
+        GRADEASSESSMENT: gradedAssessmentChannel,
+        RECEIVESUBMISSION: boolChannel, RECEIVEANNOUNCEMENT: announcementChannel
+    ] (studentId: nat) is 
+        var c: course, a: assessment, courseContent: content, ga: gradedAssessment, receivedSubmission: bool, info: announcement in
+            c := empty;
+            a := empty;
+            info := empty;
+            courseContent := empty;
+            receivedSubmission := false;
+            use info; use receivedSubmission;
+            loop 
+                select 
+                    -- receive enrollment from admin (if id matches)
+                    var tempCourse: course, tempId: nat in
+                        ENROLL(?tempCourse, ?tempId) where tempId == studentId;
+                        c := tempCourse
+                    end var
+                []
+                    if c != empty then
+                        select
+                            -- receive content from CMS
+                            SERVECONTENT(?courseContent)
+                        []
+                            -- receive assessment from CMS
+                            ANNOUNCEASSESSMENT(?a)
+                        []
+                            -- view content that has been received
+                            if courseContent != empty then
+                                VIEWCONTENT(courseContent)
+                            end if
+                        []
+                            if a != empty then
+                                select
+                                    -- view assessment that has been received
+                                    VIEWASSESSMENT(a)
+                                []
+                                    -- submit assessment that has been received
+                                    SUBMITASSESSMENT(a, studentId)
+                                end select
+                            end if
+                        []
+                            -- receipt from AMS after submission
+                            RECEIVESUBMISSION(?receivedSubmission);
+                            use receivedSubmission -- remove warning
+                        []
+                            -- receive graded assessment from instructor
+                            GRADEASSESSMENT(?ga);
+                            use ga -- remove warning
+                        [] 
+                            -- receive instructor announcement from CMS
+                            RECEIVEANNOUNCEMENT(?info);
+                            use info -- remove warning
+                        end select
+                    end if
+                end select
+            end loop
+        end var
+    end process
+  
+    process Instructor[
+        ENROLL: enrollmentChannel,
+        ASSIGN: courseChannel, 
+        UPSERTASSESSMENT: assessmentChannel, 
+        FORWARDSUBMISSION: submissionChannel,
+        UPSERTCONTENT: contentChannel, 
+        GRADEASSESSMENT: gradedAssessmentChannel, 
+        SENDINFO: announcementChannel
+    ] is 
+        var c: course, info: announcement, myStudents: natList, mySubmissions: assessmentList in         
+            c := empty;
+            myStudents := {};
+            mySubmissions := {};
+            loop
+                select 
+                    -- receive course from admin
+                    ASSIGN(?c)
+                []
+                    -- receive enrollment event from admin (if it is for the instructors assigned course)
+                    var tempCourse: course, tempId: nat in
+                        ENROLL(?tempCourse, ?tempId) where tempCourse == C;
+                        myStudents := cons(tempId, myStudents)
+                    end var
+                []
+                    -- post course content/assessments to CMS
+                    if c != empty then 
+                        select 
+                            UPSERTASSESSMENT(quiz) 
+                        [] 
+                            UPSERTASSESSMENT(midterm) 
+                        [] 
+                            UPSERTASSESSMENT(assignment) 
+                        []
+                            UPSERTCONTENT(lecture)
+                        []
+                            UPSERTCONTENT(video)
+                        []
+                            -- receive submission from assessment system
+                            var tempAssessment: assessment, tempId: nat in
+                                FORWARDSUBMISSION(?tempAssessment, ?tempId) where member(tempId, myStudents);
+                                mySubmissions := cons(tempAssessment, mySubmissions)
+                            end var
+                        []
+                            -- grade assessment if one exists (pass/fail), send graded to student
+                            if not(empty(mySubmissions)) then
+                                select
+                                    GRADEASSESSMENT(tuple( head(mySubmissions), pass ))
+                                []
+                                    GRADEASSESSMENT(tuple( head(mySubmissions), fail ))
+                                end select;
+                                mySubmissions := tail(mySubmissions)
+                            end if
+                        []
+                            SENDINFO(update)
+                        []
+                            SENDINFO(reminder)
+                        end select  		    
+                    end if 
+                end select
+            end loop
+        end var
+    end process
+
+    -- INTERNAL SUBSYSTEMS
+    process CourseManagement[
+        RECEIVEASSESSMENT, ANNOUNCEASSESSMENT: assessmentChannel,
+         SERVECONTENT, UPSERTCONTENT: contentChannel, 
+         ANNOUNCEINFO, RECEIVEINFO: announcementChannel
+    ] is
+        var a: assessment, courseContent: content, info: announcement in 
+            a := empty;
+            info := empty;
+            courseContent := empty;
+            loop
+                select
+                    -- receive assessment from instructor
+                    RECEIVEASSESSMENT(?a)
+                []
+                    -- receive content from instructor
+                    UPSERTCONTENT(?courseContent)
+                []
+                    -- forward assessment to student
+                    if a != empty then
+                        ANNOUNCEASSESSMENT(a);
+                        a := empty
+                    end if 
+                []
+                    -- forward content to student
+                    if courseContent != empty then
+                        SERVECONTENT(courseContent);
+                        courseContent := empty
+                    end if
+                []
+                    RECEIVEINFO(?info)
+                []
+                    -- forward announcement to student
+                    if info != empty then 
+                        ANNOUNCEINFO(info);
+                        info := empty
+                    end if 
+                end select
+            end loop
+        end var
+    end process
+
+    process AssessmentManagement[
+        SUBMITASSESSMENT, FORWARDSUBMISSION: submissionChannel, 
+        RECEIVESUBMISSION: boolChannel
+    ] is
+        var submission: assessment, studentId: nat in
+            submission := empty;
+            studentId := 0;
+            loop
+                -- check and see if prev assignment forwarded yet, if not, forward it first
+                if submission != empty then 
+                    FORWARDSUBMISSION(submission, studentId);
+                    submission := empty
+                end if;
+
+                -- receive submission from student
+                SUBMITASSESSMENT(?submission, ?studentId);
+
+                -- acknowledge receipt to student
+                RECEIVESUBMISSION(true)
+            end loop
+        end var
+    end process
+end module
