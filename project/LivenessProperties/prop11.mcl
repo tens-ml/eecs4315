@@ -2,7 +2,6 @@
     Inevitably, for any upserts, the course management shall notify the students only once.
 *)
 
-
 macro NEVER (R) =
     [ (R) ] false
 end_macro
