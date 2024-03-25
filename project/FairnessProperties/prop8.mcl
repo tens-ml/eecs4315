@@ -1,0 +1,19 @@
+(* FAIRNESS PROPERTY 2: 
+    Every course assigned to an instructor will eventually have content created and made available to students.
+ *)
+
+macro SOME (R) =
+    < (R) > true
+end_macro
+
+macro FAIRLY (A) =
+    [ (not (A))* ] SOME (true* . (A))
+end_macro
+
+macro AFTER_1_FAIRLY_2 (A, B) =
+    [ true* . (A) ] FAIRLY (B)
+end_macro
+
+macro UPSERT () = (UPSERTASSESSMENT or UPSERTCONTENT or SENDINFO) end_macro
+
+AFTER_1_FAIRLY_2 (ASSIGN, UPSERT)

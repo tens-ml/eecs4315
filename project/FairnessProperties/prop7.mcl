@@ -1,4 +1,7 @@
-(* FAIRNESS PROPERTY 1: Every student who has been enrolled in a course and has submitted all required assessments should eventually receive their final grade. *)
+(* FAIRNESS PROPERTY 1: 
+    Every student who has been enrolled in a course and has submitted all required assessments 
+    should eventually receive their final grade. 
+*)
 
 macro SOME (R) =
     < (R) > true

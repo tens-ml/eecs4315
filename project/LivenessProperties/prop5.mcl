@@ -1,4 +1,6 @@
-(* LIVENESS PROPERTY 1: Inevitably, the system admin must be able to enroll a student into a course *)
+(* LIVENESS PROPERTY 1: 
+    Inevitably, the system admin must be able to enroll a student into a course 
+*)
 
 macro INEVITABLE (A) =
     mu X . ((< (A) > true or < not (A) > X) and [ not (A) ] X)
