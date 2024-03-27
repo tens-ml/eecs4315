@@ -1,0 +1,3 @@
+(* LIVENESS PROPERTY 2: The system is free of any deadlocks *)
+
+[true*]<true>true

@@ -1,3 +1,28 @@
-(* LIVENESS PROPERTY 2: The system is free of any deadlocks *)
+(* LIVENESS PROPERTY 3: 
+    Inevitably, for any upserts, the course management shall notify the students only once.
+*)
 
-[true*]<true>true
+macro NEVER (R) =
+    [ (R) ] false
+end_macro
+
+macro INEVITABLE (A) =
+    mu X . ((< (A) > true or < not (A) > X) and [ not (A) ] X)
+end_macro
+
+macro AFTER_1_INEVITABLE_2 (A, B) =
+    [ true* . (A) ] INEVITABLE (B)
+end_macro
+
+
+macro ENSURE_NO_REPEATS_AFTER_UPSERT_ACTIONS(UPSERT_A, ANNOUNCE_A, UPSERT_B, SERVE_B, UPSERT_C, ANNOUNCE_C) =
+    AFTER_1_INEVITABLE_2(UPSERT_A, ANNOUNCE_A) and
+    NEVER (ANNOUNCE_A . true* . ANNOUNCE_A) and
+    AFTER_1_INEVITABLE_2(UPSERT_B, SERVE_B) and
+    NEVER (SERVE_B . true* . SERVE_B) and
+    AFTER_1_INEVITABLE_2(UPSERT_C, ANNOUNCE_C) and
+    NEVER (ANNOUNCE_C . true* . ANNOUNCE_C)
+end_macro
+
+
+ENSURE_NO_REPEATS_AFTER_UPSERT_ACTIONS(UPSERTASSESSMENT, ANNOUNCEASSESSMENT ,UPSERTCONTENT, SERVECONTENT, SENDINFO, ANNOUNCEINFO)
