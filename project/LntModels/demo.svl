@@ -20,6 +20,16 @@ property FAIRNESS_PROPERTY_2 "Every course assigned to an instructor will eventu
 
 end property
 
+property LIVENESS_PROPERTY_1 "It is not guaranteed that the system admin can perform the enroll action at every state in the system's operation
+In other words, they cannot create as much students as they like (i.e., spam student enrollments)" is 
+
+    "main.bcg" |= with evaluator4
+    library standard.mcl end_library
+    INEVITABLE (ENROLL);
+    expected FALSE;
+
+end property
+
 property LIVENESS_PROPERTY_2 "The system is free of any deadlocks" is 
 
     "main.bcg" |= with evaluator4
@@ -103,7 +113,7 @@ end property
 property SAFETY_PROPERTY_5" A system admin cannot enrol students in a course unless an instructor has already been assigned to that course." is 
 
     "main.bcg" |= with evaluator4
-    [ (not (ASSIGN))* . (ENROLL) ] false
+    [ (not (ASSIGN))* . (ENROLL) ] false;
 
     expected TRUE;
 

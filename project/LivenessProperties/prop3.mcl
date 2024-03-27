@@ -1,6 +1,6 @@
 (* LIVENESS PROPERTY 1: 
-    Inevitably, the system admin must be able to enroll a student into a course 
-    [FALSE CURRENTLY]
+  It is not guaranteed that the system admin can perform the enroll action at every state in the system's operation
+In other words, they cannot create as much students as they like (i.e., spam student enrollments)
 *)
 
 macro INEVITABLE (A) =
