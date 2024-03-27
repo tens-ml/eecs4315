@@ -1,0 +1,120 @@
+"main.bcg" = generation of "moodleV1.lnt":"MAIN" ;
+
+property FAIRNESS_PROPERTY_1 "Every student who has been enrolled in a course and has submitted all required assessments 
+    should eventually receive their final grade." is 
+
+    "main.bcg" |= with evaluator4
+    library standard.mcl end_library
+    AFTER_1_FAIRLY_2 (SUBMITASSESSMENT, GRADEASSESSMENT);
+    expected TRUE;
+
+end property
+
+property FAIRNESS_PROPERTY_2 "Every course assigned to an instructor will eventually have content created and made available to students." is 
+
+    "main.bcg" |= with evaluator4
+    library standard.mcl end_library
+    macro UPSERT () = (UPSERTASSESSMENT or UPSERTCONTENT or SENDINFO) end_macro
+    AFTER_1_FAIRLY_2 (ASSIGN, UPSERT);
+    expected TRUE;
+
+end property
+
+property LIVENESS_PROPERTY_2 "The system is free of any deadlocks" is 
+
+    "main.bcg" |= with evaluator4
+  
+    [true*]<true>true;
+    expected TRUE;
+
+end property
+
+property LIVENESS_PROPERTY_3 "Inevitably, When a student submits an assessment, the assessment subsystem will only 
+    notify the Instructor once i.e., you cannot spam the instructor with notifications" is 
+
+    "main.bcg" |= with evaluator4
+    library standard.mcl end_library
+    macro ENSURE_NOTIFICATION_ONCE_POST_SUBMISSION(S, N) =
+        AFTER_1_INEVITABLE_2(S, N) and
+        NEVER (N . true* . N)
+    end_macro
+
+    ENSURE_NOTIFICATION_ONCE_POST_SUBMISSION(SUBMITASSESSMENT, FORWARDSUBMISSION);
+    expected TRUE;
+
+end property
+
+property LIVENESS_PROPERTY_4 "Inevitably, for any upserts, the course management shall notify the students only once.
+    In other words, system cannot spam the student with notifications" is 
+
+    "main.bcg" |= with evaluator4
+    library standard.mcl end_library
+    macro ENSURE_NO_REPEATS_AFTER_UPSERT_ACTIONS(UPSERT_A, ANNOUNCE_A, UPSERT_B, SERVE_B, UPSERT_C, ANNOUNCE_C) =
+        AFTER_1_INEVITABLE_2(UPSERT_A, ANNOUNCE_A) and
+        NEVER (ANNOUNCE_A . true* . ANNOUNCE_A) and
+        AFTER_1_INEVITABLE_2(UPSERT_B, SERVE_B) and
+        NEVER (SERVE_B . true* . SERVE_B) and
+        AFTER_1_INEVITABLE_2(UPSERT_C, ANNOUNCE_C) and
+        NEVER (ANNOUNCE_C . true* . ANNOUNCE_C)
+    end_macro
+
+    ENSURE_NO_REPEATS_AFTER_UPSERT_ACTIONS(UPSERTASSESSMENT, ANNOUNCEASSESSMENT ,UPSERTCONTENT, SERVECONTENT, SENDINFO, ANNOUNCEINFO);
+    expected TRUE;
+
+end property
+
+property SAFETY_PROPERTY_1 "A student must never receive any content if they havent enrolled in a course" is 
+
+    "main.bcg" |= with evaluator4
+    library standard.mcl end_library
+    NEVER(true* . not({ENROLL...}) . (SERVECONTENT or VIEWCONTENT));
+    expected TRUE;
+
+end property
+
+property SAFETY_PROPERTY_2 "Instructor may never grade assignments if they havent received any" is 
+
+    "main.bcg" |= with evaluator4
+    library standard.mcl end_library
+    NEVER(true* . not({FORWARDSUBMISSION...}) . {GRADEASSESSMENT...});
+    expected TRUE;
+
+end property
+
+property SAFETY_PROPERTY_3 " A student cannot view content unless the course managemenet has served it" is 
+
+    "main.bcg" |= with evaluator4
+    library standard.mcl end_library
+    NOT_1_TO_2_UNLESS_3(UPSERTCONTENT, VIEWCONTENT, SERVECONTENT);
+    expected TRUE;
+
+end property
+
+property SAFETY_PROPERTY_4 "No upserts of course content, announcement, or assessments can be made unless the instructor is currently assigned to a course" is 
+
+    "main.bcg" |= with evaluator4
+     macro UPSERT () = (UPSERTASSESSMENT or UPSERTCONTENT or SENDINFO) end_macro
+
+    [ (not (ASSIGN))* . (UPSERT) ] false;
+    expected TRUE;
+
+end property
+
+property SAFETY_PROPERTY_5" A system admin cannot enrol students in a course unless an instructor has already been assigned to that course." is 
+
+    "main.bcg" |= with evaluator4
+    [ (not (ASSIGN))* . (ENROLL) ] false
+
+    expected TRUE;
+
+end property
+
+property SAFETY_PROPERTY_6 "A student cannot view assessment unless the course managemenet has announced it." is 
+
+    "main.bcg" |= with evaluator4
+    library standard.mcl end_library
+    NOT_1_TO_2_UNLESS_3(UPSERTASSESSMENT, VIEWASSESSMENT, ANNOUNCEASSESSMENT);
+
+    expected TRUE;
+
+end property

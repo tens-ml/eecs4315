@@ -1,7 +1,6 @@
 (* LIVENESS PROPERTY 3: 
     Inevitably, When a student submits an assessment, the assessment subsystem will only 
     notify the Instructor once i.e., you cannot spam the instructor with notifications
-    [FALSE CURRENTLY]
 *)
 
 
