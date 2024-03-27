@@ -1,4 +1,4 @@
-(* SAFETY PROPERTY 4: A system admin cannot enrol students in a course unless an instructor has already been assigned to that course. *)
+(* SAFETY PROPERTY 5: A system admin cannot enrol students in a course unless an instructor has already been assigned to that course. *)
 (* This is a 'manual' version of the NOT_1_BEFORE_2 macro  *)
 
 [ (not (ASSIGN))* . (ENROLL) ] false

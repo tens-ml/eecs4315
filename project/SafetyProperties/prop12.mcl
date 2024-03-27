@@ -1,4 +1,4 @@
-(* SAFETY PROPERTY: 
+(* SAFETY PROPERTY 6: 
     A student cannot view assessment unless the course managemenet has announced it  
 *)
 

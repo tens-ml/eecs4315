@@ -1,5 +1,5 @@
-(* SAFETY PROPERTY: 
-    A student cannot view content unless the course managemenet has servd it  
+(* SAFETY PROPERTY 3: 
+    A student cannot view content unless the course managemenet has served it  
 *)
 
 macro NEVER (R) =
