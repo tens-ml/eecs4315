@@ -19,10 +19,42 @@ the Moodle system:
 
 The LNT specification of the system can be found in the following files:
     (1) moodleV0.lnt
-    (2) moodleV1.lnt
+    (2) moodleV1.lnt - Bug fixed where the System Admin is unable to enroll the student
 
 The corresponding test purposes, written in MCL language, can be found in the following files:
-    (1) standard.mcl
+    (1) prop1.mcl
+    (2) prop2.mcl
+    (3) prop3.mcl
+    (4) prop4.mcl
+    (5) prop5.mcl
+    (6) prop6.mcl
+    (7) prop7.mcl
+    (8) prop8.mcl
+    (9) prop9.mcl
+    (10) prop10.mcl
+    (11) prop11.mcl
 
 An SVL file was created to simulate and execute all of the properties that are associated with each test purposes:
     - demo.svl
+
+To compile the LNT models, please execute the following commands:
+    (1) Version 0:
+    $ lnt.open moodleV0.lnt generator moodleV0.bcg
+    
+    (2) Version 1:
+    $ lnt.open moodleV1.lnt generator moodleV1.bcg
+
+To simulate the models "on the fly" with OCIS:
+    (1) Version 0:
+    $ bcg_open moodleV0.bcg ocis
+
+    (2) Version 1:
+    $ bcg_open moodleV1.bcg ocis
+
+To compile the MCL properties individually, please execute the following command:
+    $ lnt.open moodleV{version-number}.lnt evaluator4 {property_file_name}.mcl -diag
+
+To compile all of the MCL properties in one execution, please execute the following command:
+    $ svl demo.svl
+
+
