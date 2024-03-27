@@ -4,6 +4,7 @@ property PROPERTY_1 "Test..." is
 
     "main.bcg" |= with evaluator4
     library prop1.mcl end_library
-    NEVER(true* . not({ENROLL...}) . (SERVECONTENT or VIEWCONTENT))
+    library standard.mcl end_library
+    NEVER(true* . not({ENROLL...}) . (SERVECONTENT or VIEWCONTENT));
     expected TRUE;
 end property
