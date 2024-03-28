@@ -4,7 +4,7 @@ macro NEVER (R) =
 [ (R) ] false
 end_macro
 
-NEVER(true* . { ENROLL(?c:String ?sid1:Nat) } . { ENROLL(?c:String ?sid2:Nat) where ((sid1) = )})
+NEVER(true* . { ENROLL(?c:String ?sid1:Nat) } . { ENROLL(?c:String ?sid2:Nat) where ((sid1) = (sid2))})
 
 
 (* Alternative: student enrollment only happens once per student *)
