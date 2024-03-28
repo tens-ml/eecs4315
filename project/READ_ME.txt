@@ -8,8 +8,8 @@
 #  CREATION DATE :   2023-March-13                                              #
 #  SUBMISSION DATE : 2023-March-27                                              # 
 #  CONTAINS : moodleV0.lnt, moodleV1.lnt, demo.svl, prop{1-11}.mcl files        # 
-#  FOLDERS: FairnessProperties, LivenessProperties, SafetyProperties, LntModels #                                                           #
-#                                                                               #
+#  FOLDERS: FairnessProperties, LivenessProperties, SafetyProperties, LntModels,#                                                           
+#  DataProperties                                                               #
 #-------------------------------------------------------------------------------#
 
 This project folder contains the work done to model and test the conceptual properties of 
@@ -22,7 +22,8 @@ Each folder stores the following:
     (1) FairnessProperties - all MCL properties related to Fairness
     (2) LivenessProperties - all MCL properties related to Liveness
     (3) SafetyProperties   - all MCL properties related to Safety
-    (4) LntModels          - revisions of the moodle system + demo.svl
+    (4) DataProperties     - all MCL properties that use data
+    (5) LntModels          - revisions of the moodle system + demo.svl
     
 The LNT specification of the system can be found in the following files:
     (1) moodleV0.lnt
@@ -40,6 +41,7 @@ The corresponding test purposes, written in MCL language, can be found in the fo
     (9) prop9.mcl
     (10) prop10.mcl
     (11) prop11.mcl
+    (12) dataProp1.mcl
 
 An SVL file was created to simulate and execute all of the properties that are associated with each test purposes:
     - demo.svl

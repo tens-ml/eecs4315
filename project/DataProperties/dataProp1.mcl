@@ -1,0 +1,7 @@
+(* A student may enroll in a course once an instructor has been assigned *)
+
+macro SameCourse (A, B) =
+  ((A) = (B))
+end_macro
+
+< true* . { ASSIGN(?c:String) } . {ENROLL(?c2:String ?sid:Nat) where (SameCourse(c, c2))} > true
