@@ -1,0 +1,8 @@
+(* it is never the case that, after an arbitrary sequence of actions, there is an enrollment for a course by a student, 
+  if there has not been an assignment of an instructor to the same course *)
+
+macro SameCourse (A, B) =
+  ((A) = (B))
+end_macro
+
+[ true* . {ASSIGN ?c:String} . {ENROLL ?c2:String ?sid:Nat where not(SameCourse(c, c2))} ] false

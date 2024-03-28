@@ -6,8 +6,8 @@
 #                                                                               #
 #  AUTHOR :  Rafael Dolores, Alex Arnold                                        #
 #  CREATION DATE :   2023-March-13                                              #
-#  SUBMISSION DATE : 2023-March-27                                              # 
-#  CONTAINS : moodleV0.lnt, moodleV1.lnt, demo.svl, prop{1-11}.mcl files        # 
+#  SUBMISSION DATE : 2023-March-28                                              # 
+#  CONTAINS : moodleV0.lnt, moodleV1.lnt, demo.svl, prop{1-13}.mcl files        # 
 #  FOLDERS: FairnessProperties, LivenessProperties, SafetyProperties, LntModels,#                                                           
 #  DataProperties                                                               #
 #-------------------------------------------------------------------------------#
@@ -30,19 +30,20 @@ The LNT specification of the system can be found in the following files:
     (2) moodleV1.lnt - Bug fixed where the System Admin is unable to enroll the student
 
 The corresponding test purposes, written in MCL language, can be found in the following files:
-    (1) prop1.mcl
-    (2) prop2.mcl
-    (3) prop3.mcl
-    (4) prop4.mcl
-    (5) prop5.mcl
-    (6) prop6.mcl
-    (7) prop7.mcl
-    (8) prop8.mcl
-    (9) prop9.mcl
+    (1)  prop1.mcl
+    (2)  prop2.mcl
+    (3)  prop3.mcl
+    (4)  prop4.mcl
+    (5)  prop5.mcl
+    (6)  prop6.mcl
+    (7)  prop7.mcl
+    (8)  prop8.mcl
+    (9)  prop9.mcl
     (10) prop10.mcl
     (11) prop11.mcl
-    (12) dataProp1.mcl
-
+    (12) prop12.mcl
+    (13) prop13.mcl
+    
 An SVL file was created to simulate and execute all of the properties that are associated with each test purposes:
     - demo.svl
 
