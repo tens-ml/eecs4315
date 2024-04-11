@@ -1,4 +1,4 @@
-module moodleV1 
+module moodleV2 
 with ==, !=, get, set 
 is
 
@@ -13,7 +13,7 @@ is
     type content is lecture, video, empty end type
     type announcement is update, reminder, empty end type
     type grade is pass, fail end type   
-    type gradedAssessment is tuple(a: assessment, g: grade) end type 
+    type gradedAssessment is tuple(a: assessment, g: grade, sid: nat), empty end type 
     type submittedAssessment is tuple(a: assessment, q: assessmentQuality, sid: nat), empty end type
     type assessmentList is list of submittedAssessment with head, tail, member, empty end type 
 
@@ -28,7 +28,7 @@ is
     channel boolChannel is (b: bool) end channel
     channel announcementChannel is (a:announcement) end channel
     channel enrollmentChannel is (c: course, sid: nat) end channel
-    channel submissionChannel is (sa: submittedAssessment, sid: nat) end channel
+    channel submissionChannel is (sa: submittedAssessment) end channel
 
 ------------------------------------------------------------------------
 --  Processes
@@ -39,9 +39,9 @@ is
         SERVECONTENT, UPSERTCONTENT, VIEWCONTENT: contentChannel, 
         VIEWASSESSMENT, ANNOUNCEASSESSMENT, UPSERTASSESSMENT: assessmentChannel,
         SUBMITASSESSMENT, FORWARDSUBMISSION: submissionChannel, 
-        GRADEASSESSMENT: gradedAssessmentChannel, 
+        GRADEASSESSMENT, VIEWGRADEDASSESSMENT: gradedAssessmentChannel, 
         RECEIVESUBMISSION: boolChannel, 
-        ANNOUNCEINFO, SENDINFO: announcementChannel
+        ANNOUNCEINFO, SENDINFO, VIEWINFO: announcementChannel
     ] is
         var studentId1, studentId2: nat in 
             studentId1 := 1;
@@ -52,12 +52,12 @@ is
                 -> SystemAdmin[ENROLL, ASSIGN] 
                 ({studentId1, studentId2})
             ||    
-                ENROLL, ANNOUNCEASSESSMENT, SERVECONTENT, SUBMITASSESSMENT, RECEIVESUBMISSION, GRADEASSESSMENT, ANNOUNCEINFO 
-                -> Student[ENROLL, SERVECONTENT, VIEWCONTENT, ANNOUNCEASSESSMENT, VIEWASSESSMENT, SUBMITASSESSMENT, GRADEASSESSMENT, RECEIVESUBMISSION, ANNOUNCEINFO]
+                ENROLL, ANNOUNCEASSESSMENT, SERVECONTENT, SUBMITASSESSMENT, RECEIVESUBMISSION, GRADEASSESSMENT, VIEWGRADEDASSESSMENT, ANNOUNCEINFO, VIEWINFO
+                -> Student[ENROLL, SERVECONTENT, VIEWCONTENT, ANNOUNCEASSESSMENT, VIEWASSESSMENT, SUBMITASSESSMENT, GRADEASSESSMENT, VIEWGRADEDASSESSMENT, RECEIVESUBMISSION, ANNOUNCEINFO, VIEWINFO]
                 (studentId1)
             ||    
-                ENROLL, ANNOUNCEASSESSMENT, SERVECONTENT, SUBMITASSESSMENT, RECEIVESUBMISSION, GRADEASSESSMENT, ANNOUNCEINFO 
-                -> Student[ENROLL, SERVECONTENT, VIEWCONTENT, ANNOUNCEASSESSMENT, VIEWASSESSMENT, SUBMITASSESSMENT, GRADEASSESSMENT, RECEIVESUBMISSION, ANNOUNCEINFO]
+                ENROLL, ANNOUNCEASSESSMENT, SERVECONTENT, SUBMITASSESSMENT, RECEIVESUBMISSION, GRADEASSESSMENT, VIEWGRADEDASSESSMENT, ANNOUNCEINFO, VIEWINFO
+                -> Student[ENROLL, SERVECONTENT, VIEWCONTENT, ANNOUNCEASSESSMENT, VIEWASSESSMENT, SUBMITASSESSMENT, GRADEASSESSMENT, VIEWGRADEDASSESSMENT, RECEIVESUBMISSION, ANNOUNCEINFO, VIEWINFO]
                 (studentId2)
             ||
                 ENROLL, ASSIGN, UPSERTASSESSMENT, UPSERTCONTENT, GRADEASSESSMENT, FORWARDSUBMISSION, SENDINFO 
@@ -112,12 +112,14 @@ is
         SERVECONTENT, VIEWCONTENT: contentChannel, 
         ANNOUNCEASSESSMENT, VIEWASSESSMENT: assessmentChannel,
         SUBMITASSESSMENT: submissionChannel,
-        GRADEASSESSMENT: gradedAssessmentChannel,
-        RECEIVESUBMISSION: boolChannel, RECEIVEANNOUNCEMENT: announcementChannel
+        GRADEASSESSMENT, VIEWGRADEDASSESSMENT: gradedAssessmentChannel,
+        RECEIVESUBMISSION: boolChannel, 
+        RECEIVEANNOUNCEMENT, VIEWINFO: announcementChannel
     ] (studentId: nat) is 
         var c: course, a: assessment, courseContent: content, ga: gradedAssessment, receivedSubmission: bool, info: announcement in
             c := empty;
             a := empty;
+            ga := empty;
             info := empty;
             courseContent := empty;
             receivedSubmission := false;
@@ -151,9 +153,10 @@ is
                                     VIEWASSESSMENT(a)
                                 []
                                     -- submit assessment that has been received
-                                    var sa: submittedAssessment in
-                                        sa := tuple(a, any assessmentQuality)
-                                        SUBMITASSESSMENT(sa, studentId)
+                                    var sa: submittedAssessment, q: assessmentQuality in
+                                        q := any assessmentQuality;
+                                        sa := tuple(a, q, studentId);
+                                        SUBMITASSESSMENT(sa)
                                     end var
                                 end select
                             end if
@@ -163,12 +166,25 @@ is
                             use receivedSubmission -- remove warning
                         []
                             -- receive graded assessment from instructor
-                            GRADEASSESSMENT(?ga);
-                            use ga -- remove warning
+                            var tempGraded: gradedAssessment in
+                                GRADEASSESSMENT(?tempGraded);
+                                if tempGraded.sid == studentId then
+                                    ga := tempGraded
+                                end if
+                            end var
                         [] 
                             -- receive instructor announcement from CMS
-                            RECEIVEANNOUNCEMENT(?info);
-                            use info -- remove warning
+                            RECEIVEANNOUNCEMENT(?info)
+                        []
+                            -- view graded assessment once one has been received
+                            if ga != empty then
+                                VIEWGRADEDASSESSMENT(ga)
+                            end if
+                        []
+                            -- view info received from instructor (via CMS)
+                            if info != empty then
+                                VIEWINFO(info)
+                            end if
                         end select
                     end if
                 end select
@@ -220,17 +236,17 @@ is
                             UPSERTCONTENT(video)
                         []
                             -- receive submission from assessment system
-                            var tempSubmission: submittedAssessment, tempId: nat in
-                                FORWARDSUBMISSION(?tempSubmission, ?tempId) where member(tempId, myStudents);
+                            var tempSubmission: submittedAssessment in
+                                FORWARDSUBMISSION(?tempSubmission) where member(tempSubmission.sid, myStudents);
                                 mySubmissions := cons(tempSubmission, mySubmissions)
                             end var
                         []
                             -- grade assessment if one exists (pass/fail), send graded to student
                             if not(empty(mySubmissions)) then
-                                if head(mySubmissions).q == good or head(mySubmissions).q == okay then
-                                    GRADEASSESSMENT(tuple( head(mySubmissions).a, pass ))
+                                if (head(mySubmissions).q == good) or (head(mySubmissions).q == okay) then
+                                    GRADEASSESSMENT(tuple( head(mySubmissions).a, pass, head(mySubmissions).sid ))
                                 else
-                                    GRADEASSESSMENT(tuple( head(mySubmissions).a, fail ))
+                                    GRADEASSESSMENT(tuple( head(mySubmissions).a, fail, head(mySubmissions).sid ))
                                 end if;
                                 mySubmissions := tail(mySubmissions)
                             end if
@@ -295,16 +311,18 @@ is
         SUBMITASSESSMENT, FORWARDSUBMISSION: submissionChannel, 
         RECEIVESUBMISSION: boolChannel
     ] is
-        var submission: submittedAssessment, studentId: nat in
+        var submission: submittedAssessment in
+            submission := empty;
             loop
                 -- check and see if prev assignment forwarded yet, if not, forward it first
                 if submission != empty then 
-                    FORWARDSUBMISSION(submission, studentId);
-                    submission := empty
+                    FORWARDSUBMISSION(submission);
+                    submission := empty;
+                    use submission -- get a warning without this -> bug with LNT?
                 end if;
 
                 -- receive submission from student
-                SUBMITASSESSMENT(?submission, ?studentId);
+                SUBMITASSESSMENT(?submission);
 
                 -- acknowledge receipt to student
                 RECEIVESUBMISSION(true)
