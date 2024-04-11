@@ -123,7 +123,7 @@ is
             info := empty;
             courseContent := empty;
             receivedSubmission := false;
-            use info; use receivedSubmission;
+            use receivedSubmission;
             loop 
                 select 
                     -- receive enrollment from admin (if id matches)
