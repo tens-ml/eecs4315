@@ -274,6 +274,23 @@ is
             info := empty;
             courseContent := empty;
             loop
+                -- forward assessment to student
+                if a != empty then
+                    ANNOUNCEASSESSMENT(a);
+                    a := empty
+                end if;
+
+                -- forward content to student
+                if courseContent != empty then
+                    SERVECONTENT(courseContent);
+                    courseContent := empty
+                end if;
+
+                -- forward announcement to student
+                if info != empty then 
+                    ANNOUNCEINFO(info);
+                    info := empty
+                end if;
                 select
                     -- receive assessment from instructor
                     RECEIVEASSESSMENT(?a)
@@ -281,25 +298,7 @@ is
                     -- receive content from instructor
                     UPSERTCONTENT(?courseContent)
                 []
-                    -- forward assessment to student
-                    if a != empty then
-                        ANNOUNCEASSESSMENT(a);
-                        a := empty
-                    end if 
-                []
-                    -- forward content to student
-                    if courseContent != empty then
-                        SERVECONTENT(courseContent);
-                        courseContent := empty
-                    end if
-                []
                     RECEIVEINFO(?info)
-                []
-                    -- forward announcement to student
-                    if info != empty then 
-                        ANNOUNCEINFO(info);
-                        info := empty
-                    end if 
                 end select
             end loop
         end var
