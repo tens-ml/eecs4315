@@ -28,6 +28,10 @@ Each folder stores the following:
 The LNT specification of the system can be found in the following files:
     (1) moodleV0.lnt
     (2) moodleV1.lnt - Bug fixed where the System Admin is unable to enroll the student
+    (3) moodleV2.lnt 
+        (i)  Inclusion of different assignment grades 
+        (ii) Utilization of different variables instead of just invoking "use" command and treating 
+             them as generic placeholders.
 
 The corresponding test purposes, written in MCL language, can be found in the following files:
     (1)  prop1.mcl
