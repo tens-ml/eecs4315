@@ -148,7 +148,7 @@ module moodle is
         GRADEASSESSMENT: gradedAssessmentChannel, 
         SENDINFO: announcementChannel
     ] is 
-        var c: course, info: announcement, myStudents: natList, mySubmissions: assessmentList in         
+        var c: course, myStudents: natList, mySubmissions: assessmentList in         
             c := empty;
             myStudents := {};
             mySubmissions := {};
