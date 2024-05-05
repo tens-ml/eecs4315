@@ -1,15 +1,13 @@
 #-------------------------------------------------------------------------------#
-#                                                                               #
 #  COURSE:  EECS 4315 - Mission Critical Systems                                #
 #  SYSTEM: Moodle - Educational Learning Management                             #
-#  STUDY : LNT & MCL Course Project - First Progress                            #
+#  STUDY : LNT & MCL Course Project - Final Submission                          #
 #                                                                               #
 #  AUTHOR :  Rafael Dolores, Alex Arnold                                        #
-#  CREATION DATE :   2023-March-13                                              #
-#  SUBMISSION DATE : 2023-March-28                                              # 
-#  CONTAINS : moodleV0.lnt, moodleV1.lnt, demo.svl, prop{1-13}.mcl files        # 
-#  FOLDERS: FairnessProperties, LivenessProperties, SafetyProperties, LntModels,#                                                           
-#  DataProperties                                                               #
+#  CREATION DATE :   2023-May-05                                                #
+#  SUBMISSION DATE : 2023-May-05                                                # 
+#  CONTAINS : moodleV{0-2}.lnt, demo.svl, prop{1-13}.mcl files                  # 
+#  FOLDERS: FairnessProperties, LivenessProperties, SafetyProperties, LntModels #                                                           
 #-------------------------------------------------------------------------------#
 
 This project folder contains the work done to model and test the conceptual properties of 
@@ -22,10 +20,9 @@ Each folder stores the following:
     (1) FairnessProperties - all MCL properties related to Fairness
     (2) LivenessProperties - all MCL properties related to Liveness
     (3) SafetyProperties   - all MCL properties related to Safety
-    (4) DataProperties     - all MCL properties that use data
-    (5) LntModels          - revisions of the moodle system + demo.svl
+    (4) LntModels          - revisions of the moodle system + demo.svl
     
-The LNT specification of the system can be found in the following files:
+The LNT specification of the system can be found in the following files (inside LntModels folder):
     (1) moodleV0.lnt
     (2) moodleV1.lnt - Bug fixed where the System Admin is unable to enroll the student
     (3) moodleV2.lnt 
@@ -48,7 +45,7 @@ The corresponding test purposes, written in MCL language, can be found in the fo
     (12) prop12.mcl
     (13) prop13.mcl
     
-An SVL file was created to simulate and execute all of the properties that are associated with each test purposes:
+An SVL file (inside LntModels folder) was created to simulate and execute all of the properties that are associated with each test purposes:
     - demo.svl
 
 To compile the LNT models, please execute the following commands:
@@ -58,12 +55,18 @@ To compile the LNT models, please execute the following commands:
     (2) Version 1:
     $ lnt.open moodleV1.lnt generator moodleV1.bcg
 
+    (3) Version 2:
+    $ lnt.open moodleV2.lnt generator moodleV1.bcg
+
 To simulate the models "on the fly" with OCIS:
     (1) Version 0:
     $ bcg_open moodleV0.bcg ocis
 
     (2) Version 1:
     $ bcg_open moodleV1.bcg ocis
+
+    (3) Version 2:
+    $ bcg_open moodleV2.bcg ocis
 
 To compile the MCL properties individually, please execute the following command:
     $ lnt.open moodleV{version-number}.lnt evaluator4 {property_file_name}.mcl -diag
